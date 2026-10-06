@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Comprobación de Gastos</title>
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<meta name="theme-color" content="#234067">
+<style>
+  :root { color-scheme: light dark; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Montserrat:wght@400;500;600;700&family=Roboto+Mono:wght@500;600&display=swap');
+
+  /* Paleta oficial Grupo Firme (BrandBoard): #1D1D1B · #C51315 · #F9B233 · #FFCD00 · #234067
+     Comprobaciones usa el azul de marca como color principal para distinguirse de Requisiciones. */
+  :root {
+    --navy: #1D1D1B; --navy-deep: #234067; --turquoise: #F9B233; --turquoise-deep: #234067;
+    --brand-navy: #234067; --brand-yellow: #FFCD00; --brand-orange: #F9B233; --brand-red: #C51315;
+    --paper: #F3F5F8; --surface: #FFFFFF; --ink: #1D1D1B; --ink-soft: #5B6676; --border: #DCE2EA;
+    --success: #2E7D32; --success-bg: #E3F0E4; --warn: #8A5A00; --warn-bg: #FFF3CC;
+    --critical: #C51315; --critical-bg: #F9E2E2; --extra: #1D1D1B; --extra-bg: #FFF4C7;
+    --info: #234067; --info-bg: #E3EAF3;
+    --shadow: 0 1px 2px rgba(35,64,103,.06), 0 8px 24px rgba(35,64,103,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --navy: #E9EEF5; --navy-deep: #FFCD00; --turquoise: #FFCD00; --turquoise-deep: #7FA3D6;
+      --paper: #0F1724; --surface: #172234; --ink: #EEF2F7; --ink-soft: #A9B6C8; --border: #2A3A52;
+      --success: #6FCF7A; --success-bg: #1E3320; --warn: #FFD426; --warn-bg: #3F3717;
+      --critical: #F07B7C; --critical-bg: #3B1B1A; --extra: #EEF2F7; --extra-bg: #4F4415;
+      --info: #A9C2E6; --info-bg: #1D2C44;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --navy: #E9EEF5; --navy-deep: #FFCD00; --turquoise: #FFCD00; --turquoise-deep: #7FA3D6;
+    --paper: #0F1724; --surface: #172234; --ink: #EEF2F7; --ink-soft: #A9B6C8; --border: #2A3A52;
+    --success: #6FCF7A; --success-bg: #1E3320; --warn: #FFD426; --warn-bg: #3F3717;
+    --critical: #F07B7C; --critical-bg: #3B1B1A; --extra: #EEF2F7; --extra-bg: #4F4415;
+    --info: #A9C2E6; --info-bg: #1D2C44;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  body { background: var(--paper); color: var(--ink); font-family: 'Montserrat', system-ui, sans-serif; padding-inline: 16px; padding-block: 0 32px; }
+  a { color: var(--turquoise-deep); }
+  .mono { font-family: 'Roboto Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  .topbar { background: #234067; margin-inline: -16px; padding: 0 16px 26px; color: #FFFFFF; position: relative; overflow: hidden; }
+  .topbar::after { content: ''; position: absolute; right: -60px; top: -60px; width: 260px; height: 260px; background: linear-gradient(135deg, rgba(255,205,0,.16), rgba(249,178,51,0) 60%); transform: rotate(45deg); pointer-events: none; }
+  .brand-stripe { height: 6px; margin: 0 -16px 22px; background: linear-gradient(90deg, #FFCD00 0%, #F9B233 70%, #C51315 100%); }
+  .topbar-inner { max-width: 820px; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .brand-logo { height: 44px; width: auto; display: block; }
+  h1 { font-family: 'Barlow Condensed', 'Montserrat', sans-serif; font-weight: 700; font-size: clamp(30px, 4vw, 38px); text-transform: uppercase; line-height: 1.15; margin: 0 0 8px; text-wrap: balance; color: #FFFFFF; letter-spacing: .01em; }
+  .lede { font-size: 15px; color: rgba(255,255,255,.82); max-width: 58ch; margin: 0 0 4px; }
+  .code-line { font-size: 12px; color: #FFCD00; font-family: 'Roboto Mono', monospace; }
+
+  main { max-width: 820px; margin: 20px auto 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid #234067; border-radius: 12px; box-shadow: var(--shadow); padding: 24px; margin-bottom: 16px; }
+  @media (max-width: 480px) { .card { padding: 18px 16px; } }
+
+  .section-title { font-family: 'Barlow Condensed', 'Montserrat', sans-serif; font-weight: 700; font-size: 19px; text-transform: uppercase; letter-spacing: .02em; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+  .section-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: #FFCD00; color: #234067; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .section-hint { font-size: 12.5px; color: var(--ink-soft); margin: 0 0 18px; }
+
+  fieldset { border: none; margin: 0; padding: 0; min-width: 0; }
+  .field { margin-bottom: 18px; min-width: 0; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .row2, .row3 { grid-template-columns: 1fr; gap: 0; } }
+
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  label .opt { font-weight: 400; color: var(--ink-soft); }
+  input[type="text"], input[type="number"], input[type="email"], input[type="date"], textarea, select {
+    width: 100%; font: inherit; font-size: 14px; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--border); border-radius: 8px; padding: 11px 12px; transition: border-color .15s, box-shadow .15s; min-width: 0;
+  }
+  input[readonly] { background: transparent; border-style: dashed; color: var(--ink-soft); }
+  select { cursor: pointer; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--turquoise); box-shadow: 0 0 0 3px color-mix(in srgb, var(--turquoise) 22%, transparent); }
+  textarea { min-height: 64px; resize: vertical; }
+  .invalid { border-color: var(--critical) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--critical) 15%, transparent) !important; }
+  .money { text-align: right; font-family: 'Roboto Mono', monospace; font-variant-numeric: tabular-nums; }
+  .hint { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+
+  .pill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 480px) { .pill-grid { grid-template-columns: 1fr; } }
+  .pill-grid input { position: absolute; opacity: 0; pointer-events: none; }
+  .pill { display: flex; align-items: flex-start; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; position: relative; background: var(--paper); transition: border-color .15s, background .15s; margin: 0; }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-soft); flex-shrink: 0; margin-top: 6px; }
+  .pill small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 11.5px; margin-top: 1px; }
+  .pill:has(input:checked) { border-color: var(--turquoise); background: color-mix(in srgb, var(--turquoise) 10%, var(--surface)); }
+  .pill:has(input:checked) .dot { background: var(--turquoise-deep); }
+  .pill:has(input:focus-visible) { box-shadow: 0 0 0 3px color-mix(in srgb, var(--turquoise) 30%, transparent); }
+  .pill-grid.invalid-group .pill { border-color: var(--critical); }
+
+  .money-row { display: grid; grid-template-columns: 1fr 64px; gap: 8px; align-items: center; }
+  .money-row .cur { font-size: 13px; color: var(--ink-soft); }
+
+  /* comprobantes */
+  #items-wrap { display: flex; flex-direction: column; gap: 14px; }
+  .item-row { border: 1px solid var(--border); border-radius: 10px; padding: 16px 16px 14px; background: var(--paper); }
+  .item-row input, .item-row select, .item-row textarea { background: var(--surface); font-size: 13.5px; padding: 9px 10px; }
+  .item-row input[readonly] { background: transparent; }
+  .item-row label { font-size: 11.5px; margin-bottom: 4px; }
+  .item-row .field { margin-bottom: 12px; }
+  .item-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .item-head-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .item-num { font-family: 'Roboto Mono', monospace; font-weight: 600; font-size: 12.5px; color: var(--navy-deep); }
+  .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-soft); background: var(--surface); }
+  .badge.ok { color: var(--success); background: var(--success-bg); border-color: transparent; }
+  .badge.warn { color: var(--warn); background: var(--warn-bg); border-color: transparent; }
+  .badge.bad { color: var(--critical); background: var(--critical-bg); border-color: transparent; }
+  .item-remove { font: inherit; font-size: 12px; font-weight: 600; color: var(--critical); background: transparent; border: none; cursor: pointer; padding: 4px 6px; }
+  .item-remove:hover { text-decoration: underline; }
+
+  .uploads { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  @media (max-width: 560px) { .uploads { grid-template-columns: 1fr; } }
+  .drop { position: relative; border: 1.5px dashed var(--border); border-radius: 10px; background: var(--surface); padding: 12px 14px; cursor: pointer; transition: border-color .15s, background .15s; display: flex; gap: 10px; align-items: center; min-height: 62px; }
+  .drop:hover, .drop.drag { border-color: var(--turquoise); background: color-mix(in srgb, var(--turquoise) 8%, var(--surface)); }
+  .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .drop .ico { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; font-family: 'Roboto Mono', monospace; font-size: 10.5px; font-weight: 600; color: #fff; background: var(--navy); }
+  .drop[data-kind="pdf"] .ico { background: #C51315; }
+  .drop .txt { font-size: 12.5px; line-height: 1.35; min-width: 0; }
+  .drop .txt strong { display: block; font-size: 13px; }
+  .drop .txt span { color: var(--ink-soft); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .drop.has-file { border-style: solid; border-color: color-mix(in srgb, var(--success) 55%, var(--border)); }
+  .file-chips { display: flex; gap: 6px; flex-wrap: wrap; margin: -4px 0 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 3px 4px 3px 10px; max-width: 100%; }
+  .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+  .chip button { border: none; background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 6px; border-radius: 999px; }
+  .chip button:hover { color: var(--critical); background: var(--critical-bg); }
+
+  .cfdi-strip { font-size: 12px; border-radius: 8px; padding: 9px 12px; margin-bottom: 12px; background: var(--surface); border: 1px solid var(--border); display: grid; gap: 3px; }
+  .cfdi-strip .k { color: var(--ink-soft); }
+  .cfdi-strip .w { color: var(--critical); font-weight: 600; }
+  .cfdi-strip .mono { font-size: 11.5px; word-break: break-all; }
+
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 560px) { .g2, .g3 { grid-template-columns: 1fr; gap: 0; } }
+  .nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 640px) { .nums { grid-template-columns: 1fr 1fr; } }
+  .nums .field { margin-bottom: 10px; }
+  .iva-wrap { position: relative; }
+  .iva-btn { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); font: inherit; font-size: 10.5px; font-weight: 600; border: 1px solid var(--border); background: var(--paper); color: var(--ink-soft); border-radius: 6px; padding: 3px 6px; cursor: pointer; }
+  .iva-btn:hover { border-color: var(--turquoise); color: var(--turquoise-deep); }
+  .iva-wrap input { padding-right: 46px; }
+  .line-total { display: flex; justify-content: flex-end; align-items: baseline; gap: 10px; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 2px; font-size: 12.5px; color: var(--ink-soft); }
+  .line-total strong { font-family: 'Roboto Mono', monospace; font-size: 17px; color: var(--ink); }
+
+  #add-item-btn { font: inherit; font-weight: 600; font-size: 13.5px; color: var(--turquoise-deep); background: color-mix(in srgb, var(--turquoise) 10%, var(--surface)); border: 1px dashed var(--turquoise); border-radius: 10px; padding: 12px; cursor: pointer; width: 100%; text-align: center; margin-top: 14px; }
+  #add-item-btn:hover { background: color-mix(in srgb, var(--turquoise) 18%, var(--surface)); }
+
+  /* resumen */
+  .totals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 560px) { .totals { grid-template-columns: 1fr; } }
+  .tot { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--paper); }
+  .tot .l { font-size: 12px; color: var(--ink-soft); }
+  .tot .n { font-family: 'Roboto Mono', monospace; font-weight: 600; font-size: 20px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .tot[data-tone="due"] .n { color: var(--turquoise-deep); }
+  .tot[data-tone="pending"] .n { color: var(--warn); }
+  .tot[data-tone="even"] .n { color: var(--success); }
+  .letra { font-size: 12.5px; color: var(--ink-soft); border-left: 3px solid var(--turquoise); padding: 4px 0 4px 10px; margin: 0 0 6px; }
+  .letra b { color: var(--ink); font-weight: 600; }
+
+  .error-msg { font-size: 13px; color: var(--critical); background: var(--critical-bg); border-radius: 8px; padding: 10px 12px; margin-top: 16px; display: none; }
+  .error-msg.show { display: block; }
+  .submit-row { margin-top: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  button.primary { font: inherit; font-weight: 600; font-size: 14.5px; color: #FFFFFF; background: var(--turquoise-deep); border: none; border-radius: 8px; padding: 12px 22px; cursor: pointer; transition: background .15s, transform .1s; }
+  button.primary:hover { background: #1A3150; }
+  button.primary:active { transform: translateY(1px); }
+  button.primary:disabled { opacity: .6; cursor: progress; }
+  .submit-note { font-size: 12.5px; color: var(--ink-soft); }
+
+  .confirm .badge-ok { display: inline-flex; align-items: center; gap: 8px; background: var(--success-bg); color: var(--success); font-weight: 600; font-size: 13px; padding: 6px 12px; border-radius: 999px; margin-bottom: 16px; }
+  .confirm .badge-ok::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+  .ticket-id { font-family: 'Roboto Mono', monospace; font-weight: 600; font-size: 24px; letter-spacing: .02em; color: var(--navy-deep); margin: 0 0 4px; }
+  .confirm p { color: var(--ink-soft); font-size: 14px; line-height: 1.55; margin: 0 0 18px; }
+  .confirm-summary { border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-size: 13px; display: grid; gap: 8px; margin: 0 0 12px; background: var(--paper); }
+  .confirm-summary div { display: flex; justify-content: space-between; gap: 12px; }
+  .confirm-summary dt { color: var(--ink-soft); }
+  .confirm-summary dd { margin: 0; font-weight: 500; text-align: right; }
+  .tbl { border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; margin-bottom: 20px; }
+  .tbl table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .tbl th, .tbl td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .tbl td.wrap { white-space: normal; min-width: 160px; }
+  .tbl th { background: var(--paper); color: var(--ink-soft); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl .r { text-align: right; font-family: 'Roboto Mono', monospace; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(20,15,12,.55); display: grid; place-items: center; z-index: 20; padding: 16px; }
+  .overlay .box { background: var(--surface); border-radius: 12px; padding: 22px 24px; max-width: 340px; width: 100%; box-shadow: var(--shadow); text-align: center; }
+  .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--turquoise-deep); margin: 0 auto 12px; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .overlay p { margin: 0; font-size: 14px; }
+  .overlay small { color: var(--ink-soft); }
+
+  footer { max-width: 820px; margin: 22px auto 0; text-align: center; font-size: 12px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand-stripe"></div>
+  <div class="topbar-inner">
+    <div class="brand"><img class="brand-logo" src="data:image/png;base64,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" alt="Grupo Firme"></div>
+    <h1>Comprobación de Gastos</h1>
+    <p class="lede">Comprueba tus anticipos, viáticos y reembolsos con sus facturas o tickets. Tu comprobación llega directo a Administración para su revisión.</p>
+    <p class="code-line">FO-GF-01 · Rev. 00 ENE/26</p>
+  </div>
+</div>
+
+<main>
+  <form id="comp-form" novalidate>
+  <div class="card" id="card-datos">
+    <p class="section-title"><span class="section-num">1</span>Datos de la comprobación</p>
+    <p class="section-hint">Quién comprueba, quién autoriza y a qué centro de costos se aplica.</p>
+    <fieldset>
+      <div class="row2">
+        <div class="field">
+          <label for="f-solicitante">Nombre de quien comprueba</label>
+          <input type="text" id="f-solicitante" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="f-autoriza">Jefe inmediato que autoriza</label>
+          <input type="text" id="f-autoriza" required>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-contacto">Correo de contacto</label>
+          <input type="email" id="f-contacto" autocomplete="email" placeholder="tucorreo@firme.mx" required>
+        </div>
+        <div class="field">
+          <label for="f-noprov">No. de proveedor <span class="opt">(opcional)</span></label>
+          <input type="text" id="f-noprov" inputmode="numeric" placeholder="Si estás dado de alta como proveedor">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-empresa">Empresa</label>
+          <select id="f-empresa" required><option value="" disabled selected>Selecciona una empresa</option></select>
+        </div>
+        <div class="field">
+          <label for="f-cc">Centro de costos</label>
+          <select id="f-cc" required><option value="" disabled selected>Selecciona el centro de costos</option></select>
+        </div>
+      </div>
+      <div class="row3">
+        <div class="field">
+          <label for="f-fecha-sol">Fecha de solicitud</label>
+          <input type="date" id="f-fecha-sol" required>
+        </div>
+        <div class="field">
+          <label for="f-semana">Semana</label>
+          <input type="text" id="f-semana" readonly tabindex="-1" class="mono">
+        </div>
+        <div class="field">
+          <label for="f-folio-sol">Folio de solicitud <span class="opt">(opcional)</span></label>
+          <input type="text" id="f-folio-sol" placeholder="Ej. 01">
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="tipo-label">Tipo de comprobación</label>
+        <div class="pill-grid" role="radiogroup" aria-labelledby="tipo-label" id="tipo-group">
+          <label class="pill"><input type="radio" name="tipo" value="CAJA CHICA FISCAL"><span class="dot"></span><span>Caja chica fiscal<small>Gastos de caja chica con factura</small></span></label>
+          <label class="pill"><input type="radio" name="tipo" value="REEMBOLSOS FISCALES"><span class="dot"></span><span>Reembolso fiscal<small>Pagaste tú y tienes factura (XML)</small></span></label>
+          <label class="pill"><input type="radio" name="tipo" value="REEMBOLSOS NO FISCALES"><span class="dot"></span><span>Reembolso no fiscal<small>Pagaste tú, con ticket o nota sin factura</small></span></label>
+          <label class="pill"><input type="radio" name="tipo" value="TARJETA EMPRESARIAL"><span class="dot"></span><span>Tarjeta empresarial<small>Gastos pagados con tarjeta de la empresa</small></span></label>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="f-monto-sol">Monto solicitado / pagado</label>
+          <div class="money-row">
+            <input type="text" id="f-monto-sol" class="money" inputmode="decimal" placeholder="0.00">
+            <span class="cur">MXN</span>
+          </div>
+          <p class="hint">Lo que te entregaron como anticipo. Si es reembolso sin anticipo, déjalo en 0.</p>
+        </div>
+        <div class="field">
+          <label for="f-metodo">Método de pago</label>
+          <select id="f-metodo" required><option value="" disabled selected>Selecciona</option></select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-banco">Banco <span class="opt">(para depósito)</span></label>
+          <select id="f-banco"><option value="">Selecciona tu banco</option></select>
+        </div>
+        <div class="field">
+          <label for="f-clabe">CLABE interbancaria <span class="opt">(18 dígitos)</span></label>
+          <input type="text" id="f-clabe" inputmode="numeric" maxlength="18" class="mono" placeholder="000000000000000000">
+          <p class="hint" id="clabe-hint">Solo si hay un reembolso a tu favor.</p>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label for="f-obs">Observaciones <span class="opt">(opcional)</span></label>
+        <textarea id="f-obs" placeholder="Ej. Solicitud de recurso / viáticos para visita a obra"></textarea>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="card" id="card-items">
+    <p class="section-title"><span class="section-num">2</span>Comprobantes</p>
+    <p class="section-hint">Agrega un renglón por cada factura o ticket. Si subes el <b>XML del CFDI</b>, proveedor, folio, fecha e importes se llenan solos.</p>
+    <div id="items-wrap"></div>
+    <button type="button" id="add-item-btn">+ Agregar comprobante</button>
+  </div>
+
+  <div class="card" id="card-resumen">
+    <p class="section-title"><span class="section-num">3</span>Resumen</p>
+    <p class="section-hint">Se calcula automáticamente con tus comprobantes.</p>
+    <div class="totals">
+      <div class="tot"><div class="l">Monto solicitado / pagado</div><div class="n" id="t-sol">$0.00</div></div>
+      <div class="tot"><div class="l">Monto comprobado</div><div class="n" id="t-comp">$0.00</div></div>
+      <div class="tot" id="t-diff-box" data-tone="even"><div class="l" id="t-diff-l">Diferencia</div><div class="n" id="t-diff">$0.00</div></div>
+    </div>
+    <p class="letra">Importe con letra: <b id="t-letra">Cero Pesos 00/100 M.N.</b></p>
+
+    <p class="error-msg" id="error-msg"></p>
+    <div class="submit-row">
+      <button type="submit" class="primary" id="submit-btn">Enviar comprobación</button>
+      <span class="submit-note" id="submit-note">Los archivos se guardan en la carpeta de Administración.</span>
+    </div>
+  </div>
+  </form>
+
+  <div class="card confirm" id="confirm-view" hidden>
+    <span class="badge-ok">Comprobación enviada</span>
+    <p class="ticket-id" id="confirm-id">COMP-00000</p>
+    <p id="confirm-text">Tu comprobación ya llegó a Administración. Guarda este folio para darle seguimiento.</p>
+    <dl class="confirm-summary" id="confirm-summary"></dl>
+    <div class="tbl"><table id="confirm-table"></table></div>
+    <a href="#" id="reset-link">Enviar otra comprobación</a>
+  </div>
+
+  <footer>Administración · Grupo Firme — las comprobaciones se envían a Administración con sus comprobantes.</footer>
+</main>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="box"><div class="spinner"></div><p id="overlay-text">Enviando comprobación…</p><small id="overlay-sub">Subiendo comprobantes, no cierres esta página.</small></div>
+</div>
+
+<datalist id="dl-proveedores"></datalist>
+
+<script>
+(function () {
+  'use strict';
+  // ====== CONFIGURACIÓN ======
+  // URL de la Web App de Google Apps Script (Code.gs). Pega aquí la URL /exec al desplegar.
+  var APPS_SCRIPT_URL = '';
+  var MAX_ITEMS = 40;
+  var MAX_PDF_BYTES = 6 * 1024 * 1024;      // por archivo PDF
+  var MAX_TOTAL_BYTES = 30 * 1024 * 1024;   // todo el envío (base64)
+  var IMG_MAX_SIDE = 1800, IMG_QUALITY = 0.75;
+
+  var CAT = {"cc": ["101 - CAMPAMENTO TRABAJADORES LA RIBERA", "102 - PROPIO DEPAS SANTA CRUZ LA RIBERA", "103 - REMODELACIONES Y ADECUACIONES OFICINAS", "104 - PRIVADO DEPAS VISTA CORTES", "105 - CAPUFE MODERNIZACION CASETA QRO", "106 - PRIVADO DEPARTAMENTOS CIAN", "107 - PRIVADO CASA BELLAVISTA", "108 - PRIVADO CIAN ALBAÑILERIA", "109 - CPMA MONTAGE MOV TIERRA", "110 - PROYECTOS ANTERIORES (HISTORICO) FIRME", "111 - BECK-OMNI INFRAESTRUCTURA PLUVIAL FIRME", "112 - CASA MURICA", "113 - CASA ANHELO", "114 - TALLER CJR OFICINAS LA CURVA", "115 - ACTIVOS FIJOS RENTA-REMODELACION", "116 - CPMA DUNNA", "117 - ADMINISTRACION DE PROYECTOS MENORES", "118 - ACADEMIA DE PROTECCION FEDERAL ECATEPEC", "119 - ICIFED CENTRO COMUNITARIO ARBOLEDAS", "120 - TERRACERIAS FS EVENT SPACE", "121 - MOVIMIENTO DE TIERRAS OASIS", "122 - JN NUEVA CREACION - ICIFED", "123 - CISTERNA SCA", "124 - REHABILITACIÓN OBRA PLUVIAL - REA NL", "125 - MOVIMIENTO DE TIERRAS MONTAGE CTTO 2", "126 - REMODELACION OFICINAS ASP", "127 - CONSTRUCCION ESTRUCTURA ENTREPIEDRAS", "128 - TRABAJOS REPARACIONES B HERMANOS", "129 - CONSTRUCCION PUENTE LA PRESA", "130 - CONSTRUCCION CUARTEL", "131 - ALBAÑILERÍAS EXTERIORES NAYAMA COPACHISA", "132 - PAVIMENTACION CALLES COZUMEL", "134 - MANTENIMIENTO CLINICAS IMSS BIENESTAR", "135 - REMODELACIÓN OFICINAS GAP TIJUANA", "136 - CASAS ENTREPIEDRAS", "137 - MODERNIZACIÓN P.I.V. \"PRECUOTA\", KM. 90+819", "140 - CONSERVACIÓN DE PAVIMENTOS EN PISTA", "141 - TERRACERIAS JARDIN RANCH", "143 - DISTRIBUIDOR VIAL TLAPACOTA", "144 - DEMOLICIÓN Y PLATAFORMAS AEROPUERTO TIJUANA", "145 - REHABILITACIÓN PLANETARIO", "A01 - GASTOS ADMINISTRATIVOS FIRME", "ADM - AREA ADMINISTRATIVA", "CI1 - COSTOS INDIRECTOS NUEVO LEON", "CI2 - COSTOS INDIRECTOS NAYARIT", "CI3 - COSTOS INDIRECTOS LA RIBERA", "CI4 - COSTOS INDIRECTOS LOS CABOS", "CI5 - COSTOS INDIRECTOS COLIMA", "CI6 - COSTOS INDIRECTOS QUINTANA ROO", "CI7 - COSTOS INDIRECTOS TIJUANA", "CI8 - COSTOS INDIRECTOS LA PAZ", "CI9 - COSTOS INDIRECTOS MEXICO", "CV1 - COSTOS VARIABLES FIRME", "DGA - DIRECCION GENERAL ADJUNTA", "F&F - F&F", "FNZ - FINANZAS", "GC1 - GASTOS COMERCIAL FIRME", "MCC - MULTICENTRO DE COSTO", "MOD - MANO DE OBRA DIRECTA", "OTE - OFICINA TECNICA", "PY1 - PROYECTOS ANTERIORES FIRME", "RRH - RECURSOS HUMANOS", "UT1 - UTILIDAD FIRME"], "obras": ["101 - CAMPAMENTO TRABAJADORES LA RIBERA", "102 - PROPIO DEPAS SANTA CRUZ LA RIBERA", "103 - REMODELACIONES Y ADECUACIONES OFICINAS", "103-1 - CENTRO FIRME", "103-2 - ADECUACIÓN OFICINAS FELIX ORTEGA", "104 - PRIVADO DEPAS VISTA CORTES", "105 - CAPUFE MODERNIZACION CASETA QRO", "106 - PRIVADO DEPARTAMENTOS CIAN", "107 - PRIVADO CASA BELLAVISTA", "108 - PRIVADO CIAN ALBAÑILERIA", "109 - CPMA MONTAGE MOV TIERRA", "109-1 MOVIMIENTO DE TIERRAS MONTAGE RESIDENCIAS", "109-2 MALLA PERIMETRAL MONTAGE", "109-3 MOVIMIENTO DE TIERRAS MONTAGE RESIDENCIAS", "110 - PROYECTOS ANTERIORES (HISTORICO) FIRME", "111 - BECK-OMNI INFRAESTRUCTURA PLUVIAL FIRME", "112 - CASA MURICA", "113 - CASA ANHELO", "114 - TALLER CJR OFICINAS LA CURVA", "115 - ACTIVOS FIJOS RENTA-REMODELACION", "116 - CPMA DUNNA", "117 - ADMINISTRACION DE PROYECTOS MENORES", "117 - 1 - ALTELUS", "118 - ACADEMIA DE PROTECCION FEDERAL ECATEPEC", "119 - ICIFED CENTRO COMUNITARIO ARBOLEDAS", "120 - TERRACERIAS FS EVENT SPACE", "121 - MOVIMIENTO DE TIERRAS OASIS", "122 - J.N. NUEVA CREACIÓN VILLAS PALMANOVA - ICIFED", "122-1 J.N. NC 2027-2025 (CANCHA DEPORTIVA)", "123 - CISTERNA SCA", "124 - REHABILITACIÓN OBRA PLUVIAL - REA NL", "125 - MOVIMIENTO DE TIERRAS MONTAGE CTTO 2", "125 - 1 MOVIMIENTO DE TIERRAS MONTAGE CTTO 3", "126 - REMODELACION OFICINAS ASP", "127 - ENTRE PIEDRAS", "127-1 CONSTRUCCIÓN MURO ENTRE PIEDRAS", "127-2 SUMINISTRO MATS MURO ENTRE PIEDRAS", "127-3 SUMINISTRO MATS ESTRUCTURA ENTRE PIEDRAS", "127-4 INSTALACIONES GIMNASIO", "127-5 INSTALACIONES ACCESO ENTREPIEDRAS", "127-6 INFRAESTRUCTURA PLUVIAL ENTREPIEDRAS", "127-7 TERRACERIAS TORRE 1 ENTREPIEDRAS", "127-8 SUMINISTRO MATS TORRE 2", "127-9 ESTRUCTURA TORRE 2", "128 - TRABAJOS REPARACIONES B HERMANOS", "129 - CONSTRUCCION PUENTE LA PRESA", "130 - CONSTRUCCION CUARTEL", "130 - 1 REHABILITACION PARQUE OXTANKAH", "131 - ALBAÑILERÍAS EXTERIORES NAYAMA COPACHISA", "132 - PAVIMENTACIÓN CALLES COZUMEL", "134 - MANTENIMIENTO CLINICAS IMSS BIENESTAR", "135 - REMODELACIÓN OFICINAS GAP TIJUANA", "135-1 - VIALIDADES PROVISIONAL GAP TIJUANA", "136 - CASAS ENTREPIEDRAS", "136-1 SUM DE MATERIALES CASA TIPO ENTRE PIEDRAS", "137 - MODERNIZACIÓN P.I.V. \"PRECUOTA\", KM. 90+819", "140 - CONSERVACIÓN DE PAVIMENTOS EN PISTA", "141 - TERRACERIAS JARDIN RANCH", "143 - DISTRIBUIDOR VIAL TLAPACOTA", "144 - DEMOLICIÓN Y PLATAFORMAS AEROPUERTO TIJUANA", "145 - REHABILITACIÓN PLANETARIO", "A01 - GASTOS ADMINISTRATIVOS FIRME", "ADM - AREA ADMINISTRATIVA", "CI1 - COSTOS INDIRECTOS NUEVO LEON", "CI2 - COSTOS INDIRECTOS NAYARIT", "CI3 - COSTOS INDIRECTOS LA RIBERA", "CI4 - COSTOS INDIRECTOS LOS CABOS", "CI5 - COSTOS INDIRECTOS COLIMA", "CI6 - COSTOS INDIRECTOS QUINTANA ROO", "CI7 - COSTOS INDIRECTOS TIJUANA", "CI8 - COSTOS INDIRECTOS LA PAZ", "CI9 - COSTOS INDIRECTOS MEXICO", "CV1 - COSTOS VARIABLES FIRME", "DGA - DIRECCION GENERAL ADJUNTA", "F&F - F&F", "FNZ - FINANZAS", "GC1 - GASTOS COMERCIAL FIRME", "MCC - MULTICENTRO DE COSTO", "MOD - MANO DE OBRA DIRECTA", "OTE - OFICINA TECNICA", "PY1 - PROYECTOS ANTERIORES FIRME", "RRH - RECURSOS HUMANOS", "UT1 - UTILIDAD FIRME"], "partidas": ["1 - MATERIALES", "2 - MANO DE OBRA", "3 - INVENTARIO / AF", "4 - SUBCONTRATOS", "5 - INDIRECTOS", "6 - ADMINISTRATIVOS", "697 - INDIRECTOS", "699 - ANTICIPO PROVEEDORES", "699 - FONDO DE GARANTIA", "7 - GASTOS DE VENTA", "198 - MATERIALES", "298 - MANO DE OBRA/DESTAJOS", "498 - SUBCONTRATOS", "598 - INDIRECTOS", "698 - GASTOS OPERATIVOS ADMINISTRATIVOS", "798 - GASTOS OPERATIVOS VENTA"], "bancos": ["AUTOFIN", "AZTECA", "B&B", "BAJIO", "BAMSA", "BANAMEX", "BANCO FAMSA", "BANCOMEXT", "9. BANCOPPEL", "BANJERCITO", "BANOBRAS", "BANORTE", "BANREGIO", "BANSEFI", "BANSI", "BARCLAYS", "BBASE", "BBVA BANCOMER", "BMONEX", "BMULTIVA", "BULLTICK CB", "CB ACTINVER", "CB INTERCAM", "CB JPMORGAN", "CBDEUTSCHE", "CI BOLSA", "CIBANCO", "CLS", "COMPARTAMOS", "CONSUBANCO", "HSBC", "INBURSA", "INTERBANCO", "INVEX", "IXE", "JP MORGAN", "SANTANDER", "SCOTIABANK", "STP", "VE POR  MAS", "SABADELL", "N/A"]};
+  var EMPRESAS = [
+    { nombre: 'GRUPO EMPRESARIAL FIRME', rfc: '' },
+    { nombre: 'GRUPO FIRME DE MEXICO', rfc: 'GFM1211273F4' },
+    { nombre: 'CONTROL DE INGENIERIA Y SERVICIOS AÑADIDOS', rfc: '' },
+    { nombre: 'CONSTRUCCIONES Y TERRACERIAS VANGUARDIA', rfc: '' },
+    { nombre: 'COMERCIALIZADORA MUPO', rfc: '' },
+    { nombre: 'INMOBILIARIA ATARDECER DE LA PAZ', rfc: '' },
+    { nombre: 'PROYECTOS Y DESARROLLOS PUNTA CORTEZ', rfc: '' },
+    { nombre: 'SANTA CRUZ FID', rfc: '' }
+  ];
+  var METODOS = ['01 - EFECTIVO', '02 - CHEQUE', '03 - TRANSFERENCIA ELECTRÓNICA BANCARIA', '04 - TARJETA CRÉDITO', '28 - TARJETA DÉBITO'];
+
+  // ====== utilidades ======
+  function $(id) { return document.getElementById(id); }
+  function el(tag, attrs, html) { var e = document.createElement(tag); if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]); if (html != null) e.innerHTML = html; return e; }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function num(v) { if (typeof v === 'number') return isFinite(v) ? v : 0; var n = parseFloat(String(v || '').replace(/[^0-9.\-]/g, '')); return isFinite(n) ? n : 0; }
+  function r2(n) { return Math.round((n + Number.EPSILON) * 100) / 100; }
+  var fmtMXN = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+  function money(n) { return fmtMXN.format(r2(n)); }
+  function fill(select, list) { list.forEach(function (v) { var o = document.createElement('option'); o.value = v; o.textContent = v; select.appendChild(o); }); }
+  function todayISO() { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+  // Igual que WEEKNUM() de Excel (semana inicia en domingo)
+  function weekNum(iso) {
+    if (!iso) return '';
+    var p = iso.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2]);
+    var jan1 = new Date(d.getFullYear(), 0, 1);
+    var doy = Math.round((d - jan1) / 86400000);
+    return Math.floor((doy + jan1.getDay()) / 7) + 1;
+  }
+  // Importe con letra (equivalente a CONVERTIRNUM del Excel)
+  var U = ['', 'Un', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho', 'Nueve', 'Diez', 'Once', 'Doce', 'Trece', 'Catorce', 'Quince', 'Dieciséis', 'Diecisiete', 'Dieciocho', 'Diecinueve', 'Veinte', 'Veintiún', 'Veintidós', 'Veintitrés', 'Veinticuatro', 'Veinticinco', 'Veintiséis', 'Veintisiete', 'Veintiocho', 'Veintinueve'];
+  var D = ['', 'Diez', 'Veinte', 'Treinta', 'Cuarenta', 'Cincuenta', 'Sesenta', 'Setenta', 'Ochenta', 'Noventa', 'Cien'];
+  var C = ['', 'Ciento', 'Doscientos', 'Trescientos', 'Cuatrocientos', 'Quinientos', 'Seiscientos', 'Setecientos', 'Ochocientos', 'Novecientos'];
+  function nr(n) {
+    if (n === 0) return 'Cero';
+    if (n < 30) return U[n];
+    if (n <= 100) return D[Math.floor(n / 10)] + (n % 10 ? ' y ' + nr(n % 10) : '');
+    if (n < 1000) return C[Math.floor(n / 100)] + (n % 100 ? ' ' + nr(n % 100) : '');
+    if (n < 2000) return 'Mil' + (n % 1000 ? ' ' + nr(n % 1000) : '');
+    if (n < 1000000) return nr(Math.floor(n / 1000)) + ' Mil' + (n % 1000 ? ' ' + nr(n % 1000) : '');
+    if (n < 2000000) return 'Un Millón' + (n % 1000000 ? ' ' + nr(n % 1000000) : '');
+    return nr(Math.floor(n / 1000000)) + ' Millones' + (n % 1000000 ? ' ' + nr(n % 1000000) : '');
+  }
+  function letras(x) {
+    x = Math.abs(r2(x)); var ent = Math.floor(x); var cent = Math.round((x - ent) * 100);
+    return nr(ent) + (ent === 1 ? ' Peso ' : ' Pesos ') + (cent < 10 ? '0' : '') + cent + '/100 M.N.';
+  }
+
+  // ====== catálogos ======
+  fill($('f-empresa'), EMPRESAS.map(function (e) { return e.nombre; }));
+  fill($('f-cc'), CAT.cc);
+  fill($('f-metodo'), METODOS);
+  fill($('f-banco'), CAT.bancos.filter(function (b) { return b !== 'N/A'; }));
+  $('f-fecha-sol').value = todayISO();
+  function updSemana() { $('f-semana').value = $('f-fecha-sol').value ? 'Semana ' + weekNum($('f-fecha-sol').value) : ''; }
+  $('f-fecha-sol').addEventListener('change', updSemana); updSemana();
+  $('f-clabe').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 18); });
+  $('f-monto-sol').addEventListener('input', recalcTotals);
+  $('f-monto-sol').addEventListener('blur', function () { if (this.value.trim()) this.value = r2(num(this.value)).toFixed(2); });
+  $('f-empresa').addEventListener('change', function () { items.forEach(function (it) { renderCfdi(it); }); });
+
+  // catálogo de proveedores (opcional, desde el backend)
+  if (APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf('http') === 0) {
+    fetch(APPS_SCRIPT_URL + '?action=proveedores').then(function (r) { return r.json(); }).then(function (d) {
+      var dl = $('dl-proveedores'); var frag = document.createDocumentFragment();
+      (d.items || []).forEach(function (n) { var o = document.createElement('option'); o.value = n; frag.appendChild(o); });
+      dl.appendChild(frag);
+    }).catch(function () {});
+  }
+
+  // ====== comprobantes ======
+  var itemsWrap = $('items-wrap');
+  var items = [];
+  var seq = 0;
+
+  function optionList(list, ph) { return '<option value="" disabled selected>' + ph + '</option>' + list.map(function (v) { return '<option>' + esc(v) + '</option>'; }).join(''); }
+
+  function addItem(prefill) {
+    if (items.length >= MAX_ITEMS) return;
+    seq++;
+    var it = { key: seq, xml: null, cfdi: null, files: [] };
+    var row = el('div', { 'class': 'item-row', 'data-key': seq });
+    row.innerHTML =
+      '<div class="item-head"><div class="item-head-left"><span class="item-num"></span><span class="badge st"></span></div><button type="button" class="item-remove">Quitar</button></div>' +
+      '<div class="uploads">' +
+        '<label class="drop" data-kind="xml"><input type="file" class="in-xml" accept=".xml,text/xml,application/xml"><span class="ico">XML</span><span class="txt"><strong>XML del CFDI</strong><span class="xml-name">Toca o arrastra el archivo .xml</span></span></label>' +
+        '<label class="drop" data-kind="pdf"><input type="file" class="in-pdf" accept="application/pdf,image/*" multiple><span class="ico">PDF</span><span class="txt"><strong>PDF o foto del comprobante</strong><span>Factura, ticket o nota (hasta 3)</span></span></label>' +
+      '</div>' +
+      '<div class="file-chips"></div>' +
+      '<div class="cfdi-strip" hidden></div>' +
+      '<div class="g2">' +
+        '<div class="field"><label>Obra</label><select class="f-obra" required>' + optionList(CAT.obras, 'Selecciona la obra') + '</select></div>' +
+        '<div class="field"><label>Descripción de insumos (partida)</label><select class="f-partida" required>' + optionList(CAT.partidas, 'Selecciona la partida') + '</select></div>' +
+      '</div>' +
+      '<div class="g2">' +
+        '<div class="field"><label>Proveedor</label><input type="text" class="f-proveedor" list="dl-proveedores" required></div>' +
+        '<div class="field"><label>RFC del proveedor <span class="opt">(si tiene factura)</span></label><input type="text" class="f-rfc mono" maxlength="13"></div>' +
+      '</div>' +
+      '<div class="g3">' +
+        '<div class="field"><label>Folio de factura / ticket</label><input type="text" class="f-folio"></div>' +
+        '<div class="field"><label>Fecha de factura</label><input type="date" class="f-fecha" required></div>' +
+        '<div class="field"><label>Frente <span class="opt">(opcional)</span></label><input type="text" class="f-frente"></div>' +
+      '</div>' +
+      '<div class="field"><label>Descripción</label><input type="text" class="f-desc" placeholder="Ej. Gasolina para camioneta de obra" required></div>' +
+      '<div class="nums">' +
+        '<div class="field"><label>Cantidad</label><input type="text" class="f-cant money" inputmode="decimal" value="1"></div>' +
+        '<div class="field"><label>Precio unitario</label><input type="text" class="f-pu money" inputmode="decimal" placeholder="0.00"></div>' +
+        '<div class="field"><label>Subtotal</label><input type="text" class="f-sub money" readonly tabindex="-1"></div>' +
+        '<div class="field"><label>IVA</label><div class="iva-wrap"><input type="text" class="f-iva money" inputmode="decimal" placeholder="0.00"><button type="button" class="iva-btn" title="Calcular IVA al 16%">16%</button></div></div>' +
+        '<div class="field"><label>Ret. ISR</label><input type="text" class="f-risr money" inputmode="decimal" placeholder="0.00"></div>' +
+        '<div class="field"><label>Ret. IVA</label><input type="text" class="f-riva money" inputmode="decimal" placeholder="0.00"></div>' +
+        '<div class="field"><label>Otros impuestos</label><input type="text" class="f-otros money" inputmode="decimal" placeholder="0.00" title="IEPS, ISH u otros cargos incluidos en el total"></div>' +
+        '<div class="field"><label>Total</label><input type="text" class="f-total money" readonly tabindex="-1"></div>' +
+      '</div>';
+    it.row = row;
+    itemsWrap.appendChild(row);
+    items.push(it);
+
+    var q = function (c) { return row.querySelector(c); };
+    it.q = q;
+    if (prefill) { q('.f-obra').value = prefill.obra || ''; q('.f-partida').value = prefill.partida || ''; }
+
+    row.querySelectorAll('.f-cant,.f-pu,.f-iva,.f-risr,.f-riva,.f-otros').forEach(function (inp) {
+      inp.addEventListener('input', function () { calcLine(it); recalcTotals(); });
+      inp.addEventListener('blur', function () { if (inp.value.trim() !== '') inp.value = inp.classList.contains('f-cant') ? String(r2(num(inp.value))) : r2(num(inp.value)).toFixed(2); });
+    });
+    q('.iva-btn').addEventListener('click', function () { var s = num(q('.f-sub').value); q('.f-iva').value = r2(s * 0.16).toFixed(2); calcLine(it); recalcTotals(); });
+    q('.f-rfc').addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^A-ZÑ&0-9]/g, ''); });
+    q('.item-remove').addEventListener('click', function () {
+      if (items.length === 1) { resetItem(it); return; }
+      row.remove(); items = items.filter(function (x) { return x !== it; }); renumber(); recalcTotals(); checkDupUUIDs();
+    });
+    q('.in-xml').addEventListener('change', function () { if (this.files[0]) loadXml(it, this.files[0]); this.value = ''; });
+    q('.in-pdf').addEventListener('change', function () { addFiles(it, this.files); this.value = ''; });
+    row.querySelectorAll('.drop').forEach(function (d) {
+      d.addEventListener('dragover', function (e) { e.preventDefault(); d.classList.add('drag'); });
+      d.addEventListener('dragleave', function () { d.classList.remove('drag'); });
+      d.addEventListener('drop', function (e) {
+        e.preventDefault(); d.classList.remove('drag');
+        var fl = Array.prototype.slice.call(e.dataTransfer.files || []);
+        var xmls = fl.filter(function (f) { return /\.xml$/i.test(f.name) || /xml/.test(f.type); });
+        var others = fl.filter(function (f) { return xmls.indexOf(f) < 0; });
+        if (xmls[0]) loadXml(it, xmls[0]);
+        if (others.length) addFiles(it, others);
+      });
+    });
+    calcLine(it); renumber(); renderFiles(it); renderCfdi(it);
+    return it;
+  }
+
+  function resetItem(it) {
+    var o = it.q('.f-obra').value, p = it.q('.f-partida').value;
+    it.row.remove(); items = items.filter(function (x) { return x !== it; });
+    addItem({ obra: o, partida: p }); recalcTotals(); checkDupUUIDs();
+  }
+
+  function renumber() {
+    items.forEach(function (it, i) { it.q('.item-num').textContent = 'Comprobante ' + (i + 1); });
+    $('add-item-btn').hidden = items.length >= MAX_ITEMS;
+  }
+
+  function calcLine(it) {
+    var q = it.q;
+    var sub = r2(num(q('.f-cant').value) * num(q('.f-pu').value));
+    var tot = r2(sub + num(q('.f-iva').value) - num(q('.f-risr').value) - num(q('.f-riva').value) + num(q('.f-otros').value));
+    q('.f-sub').value = sub ? sub.toFixed(2) : '';
+    q('.f-total').value = tot ? tot.toFixed(2) : '';
+    it.total = tot;
+  }
+
+  function recalcTotals() {
+    var sol = r2(num($('f-monto-sol').value));
+    var comp = r2(items.reduce(function (a, it) { return a + (it.total || 0); }, 0));
+    var diff = r2(sol - comp);
+    $('t-sol').textContent = money(sol);
+    $('t-comp').textContent = money(comp);
+    var box = $('t-diff-box');
+    if (diff > 0) { $('t-diff-l').textContent = 'Por comprobar / devolver'; box.dataset.tone = 'pending'; }
+    else if (diff < 0) { $('t-diff-l').textContent = 'A reembolsar al colaborador'; box.dataset.tone = 'due'; }
+    else { $('t-diff-l').textContent = 'Cuadrado'; box.dataset.tone = 'even'; }
+    $('t-diff').textContent = money(Math.abs(diff));
+    $('t-letra').textContent = letras(comp);
+    $('clabe-hint').textContent = diff < 0 ? 'Necesaria para depositarte ' + money(-diff) + '.' : 'Solo si hay un reembolso a tu favor.';
+    return { sol: sol, comp: comp, diff: diff };
+  }
+
+  // ---- archivos ----
+  function readAsDataURL(file) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = rej; r.readAsDataURL(file); }); }
+  function compressImage(file) {
+    return readAsDataURL(file).then(function (url) {
+      return new Promise(function (res) {
+        var img = new Image();
+        img.onload = function () {
+          var w = img.width, h = img.height, s = Math.min(1, IMG_MAX_SIDE / Math.max(w, h));
+          var cv = document.createElement('canvas'); cv.width = Math.round(w * s); cv.height = Math.round(h * s);
+          var cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(img, 0, 0, cv.width, cv.height);
+          res(cv.toDataURL('image/jpeg', IMG_QUALITY));
+        };
+        img.onerror = function () { res(url); };
+        img.src = url;
+      });
+    });
+  }
+  function addFiles(it, fileList) {
+    var arr = Array.prototype.slice.call(fileList || []);
+    arr.forEach(function (f) {
+      if (it.files.length >= 3) { flash('Máximo 3 archivos PDF/foto por comprobante.'); return; }
+      var isPdf = /pdf/i.test(f.type) || /\.pdf$/i.test(f.name);
+      var isImg = /^image\//.test(f.type);
+      if (!isPdf && !isImg) { flash('"' + f.name + '" no es PDF ni imagen.'); return; }
+      if (isPdf && f.size > MAX_PDF_BYTES) { flash('"' + f.name + '" pesa más de 6 MB. Compártelo más ligero.'); return; }
+      var entry = { nombre: f.name, tipo: isPdf ? 'pdf' : 'img', mime: isPdf ? 'application/pdf' : 'image/jpeg', ready: null };
+      entry.ready = (isPdf ? readAsDataURL(f) : compressImage(f)).then(function (url) { entry.dataUrl = url; if (!isPdf) entry.nombre = f.name.replace(/\.[^.]+$/, '') + '.jpg'; });
+      it.files.push(entry);
+    });
+    renderFiles(it);
+  }
+  function renderFiles(it) {
+    var wrap = it.q('.file-chips'); wrap.innerHTML = '';
+    it.files.forEach(function (f, i) {
+      var c = el('span', { 'class': 'chip' }, '<span>' + (f.tipo === 'pdf' ? '📄 ' : '🖼 ') + esc(f.nombre) + '</span><button type="button" aria-label="Quitar archivo">×</button>');
+      c.querySelector('button').addEventListener('click', function () { it.files.splice(i, 1); renderFiles(it); });
+      wrap.appendChild(c);
+    });
+    it.q('.drop[data-kind="pdf"]').classList.toggle('has-file', it.files.length > 0);
+    if (it.files.length) it.q('.drop[data-kind="pdf"]').classList.remove('invalid');
+    updBadge(it);
+  }
+  function updBadge(it) {
+    var b = it.q('.badge.st');
+    if (it.cfdi && it.dup) { b.className = 'badge st bad'; b.textContent = 'UUID repetido'; }
+    else if (it.cfdi) { b.className = 'badge st ok'; b.textContent = 'CFDI leído'; }
+    else if (it.files.length) { b.className = 'badge st warn'; b.textContent = 'Sin XML'; }
+    else { b.className = 'badge st'; b.textContent = 'Sin archivos'; }
+  }
+
+  // ---- lectura de CFDI (XML 3.3 / 4.0) ----
+  function attr(node, name) { return node ? (node.getAttribute(name) || node.getAttribute(name.charAt(0).toLowerCase() + name.slice(1)) || '') : ''; }
+  function kids(node, local) { return node ? Array.prototype.filter.call(node.children, function (c) { return c.localName === local; }) : []; }
+  function parseCfdi(text) {
+    var doc = new DOMParser().parseFromString(text, 'application/xml');
+    if (doc.getElementsByTagName('parsererror').length) throw new Error('El archivo no es un XML válido.');
+    var comp = doc.documentElement;
+    if (!comp || comp.localName !== 'Comprobante') throw new Error('El XML no es un CFDI (no tiene nodo Comprobante).');
+    var emisor = kids(comp, 'Emisor')[0], receptor = kids(comp, 'Receptor')[0];
+    var imp = kids(comp, 'Impuestos')[0];
+    var iva = 0, ieps = 0, risr = 0, riva = 0;
+    if (imp) {
+      kids(imp, 'Traslados').forEach(function (ts) { kids(ts, 'Traslado').forEach(function (t) { var v = num(attr(t, 'Importe')); if (attr(t, 'Impuesto') === '002') iva += v; else ieps += v; }); });
+      kids(imp, 'Retenciones').forEach(function (rs) { kids(rs, 'Retencion').forEach(function (t) { var v = num(attr(t, 'Importe')); if (attr(t, 'Impuesto') === '001') risr += v; else if (attr(t, 'Impuesto') === '002') riva += v; }); });
+    }
+    var conceptos = [];
+    kids(comp, 'Conceptos').forEach(function (cs) { kids(cs, 'Concepto').forEach(function (c) { conceptos.push(attr(c, 'Descripcion')); }); });
+    var tfd = doc.getElementsByTagNameNS('*', 'TimbreFiscalDigital')[0];
+    var sub = num(attr(comp, 'SubTotal')), desc = num(attr(comp, 'Descuento')), total = num(attr(comp, 'Total'));
+    var base = r2(sub - desc);
+    var otros = r2(total - (base + iva - risr - riva));
+    var fecha = (attr(comp, 'Fecha') || '').slice(0, 10);
+    var desc1 = conceptos.slice(0, 3).join(' / ');
+    if (conceptos.length > 3) desc1 += ' (+' + (conceptos.length - 3) + ' conceptos)';
+    return {
+      version: attr(comp, 'Version'), tipo: attr(comp, 'TipoDeComprobante'),
+      serie: attr(comp, 'Serie'), folio: attr(comp, 'Folio'), fecha: fecha,
+      moneda: attr(comp, 'Moneda'), formaPago: attr(comp, 'FormaPago'), metodoPago: attr(comp, 'MetodoPago'),
+      emisorRfc: attr(emisor, 'Rfc'), emisorNombre: attr(emisor, 'Nombre'),
+      receptorRfc: attr(receptor, 'Rfc'), receptorNombre: attr(receptor, 'Nombre'), usoCfdi: attr(receptor, 'UsoCFDI'),
+      uuid: tfd ? (attr(tfd, 'UUID') || '').toUpperCase() : '',
+      subtotal: base, iva: r2(iva), retIsr: r2(risr), retIva: r2(riva), otros: Math.abs(otros) < 0.02 ? 0 : otros, total: r2(total),
+      descripcion: desc1.slice(0, 250)
+    };
+  }
+  function loadXml(it, file) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var text = String(fr.result || '');
+      var c;
+      try { c = parseCfdi(text); } catch (err) { flash(err.message); return; }
+      it.cfdi = c;
+      it.xml = { nombre: file.name, tipo: 'xml', mime: 'text/xml', dataUrl: 'data:text/xml;base64,' + btoa(unescape(encodeURIComponent(text))) };
+      var q = it.q;
+      q('.f-proveedor').value = c.emisorNombre || q('.f-proveedor').value;
+      q('.f-rfc').value = c.emisorRfc;
+      q('.f-folio').value = (c.serie ? c.serie + '-' : '') + c.folio;
+      if (c.fecha) q('.f-fecha').value = c.fecha;
+      if (!q('.f-desc').value) q('.f-desc').value = c.descripcion;
+      q('.f-cant').value = '1';
+      q('.f-pu').value = c.subtotal.toFixed(2);
+      q('.f-iva').value = c.iva ? c.iva.toFixed(2) : '';
+      q('.f-risr').value = c.retIsr ? c.retIsr.toFixed(2) : '';
+      q('.f-riva').value = c.retIva ? c.retIva.toFixed(2) : '';
+      q('.f-otros').value = c.otros ? c.otros.toFixed(2) : '';
+      q('.xml-name').textContent = file.name;
+      q('.drop[data-kind="xml"]').classList.add('has-file');
+      calcLine(it); recalcTotals(); checkDupUUIDs(); renderCfdi(it);
+      ['.f-proveedor', '.f-fecha', '.f-desc', '.f-pu', '.drop[data-kind="pdf"]'].forEach(function (s) { q(s).classList.remove('invalid'); });
+    };
+    fr.readAsText(file);
+  }
+  function renderCfdi(it) {
+    var s = it.q('.cfdi-strip'); var c = it.cfdi;
+    if (!c) { s.hidden = true; updBadge(it); return; }
+    var warns = [];
+    var emp = EMPRESAS.filter(function (e) { return e.nombre === $('f-empresa').value; })[0];
+    if (emp && emp.rfc && c.receptorRfc && c.receptorRfc.toUpperCase() !== emp.rfc) warns.push('La factura está a nombre de ' + esc(c.receptorRfc) + ', no de ' + esc(emp.nombre) + ' (' + emp.rfc + ').');
+    if (c.tipo && c.tipo !== 'I') warns.push('El CFDI no es de ingreso (tipo ' + esc(c.tipo) + ').');
+    if (c.moneda && c.moneda !== 'MXN' && c.moneda !== 'XXX') warns.push('Moneda ' + esc(c.moneda) + ': revisa el tipo de cambio.');
+    if (it.dup) warns.push('Este UUID ya está en otro comprobante de esta comprobación.');
+    if (!c.uuid) warns.push('El XML no está timbrado (sin UUID).');
+    s.innerHTML =
+      '<div><span class="k">Emisor:</span> ' + esc(c.emisorNombre) + ' · <span class="mono">' + esc(c.emisorRfc) + '</span></div>' +
+      '<div><span class="k">Receptor:</span> ' + esc(c.receptorNombre) + ' · <span class="mono">' + esc(c.receptorRfc) + '</span>' + (c.usoCfdi ? ' · Uso ' + esc(c.usoCfdi) : '') + '</div>' +
+      '<div><span class="k">UUID:</span> <span class="mono">' + esc(c.uuid || '—') + '</span> · <span class="k">Total CFDI:</span> <b class="mono">' + money(c.total) + '</b></div>' +
+      warns.map(function (w) { return '<div class="w">⚠ ' + w + '</div>'; }).join('');
+    s.hidden = false;
+    updBadge(it);
+  }
+  function checkDupUUIDs() {
+    var seen = {};
+    items.forEach(function (it) { it.dup = false; if (it.cfdi && it.cfdi.uuid) { (seen[it.cfdi.uuid] = seen[it.cfdi.uuid] || []).push(it); } });
+    Object.keys(seen).forEach(function (u) { if (seen[u].length > 1) seen[u].forEach(function (it) { it.dup = true; }); });
+    items.forEach(renderCfdi);
+  }
+
+  var flashTimer;
+  function flash(msg) { var e = $('error-msg'); e.textContent = msg; e.classList.add('show'); clearTimeout(flashTimer); flashTimer = setTimeout(function () { e.classList.remove('show'); }, 6000); }
+
+  $('add-item-btn').addEventListener('click', function () {
+    var last = items[items.length - 1];
+    var it = addItem(last ? { obra: last.q('.f-obra').value, partida: last.q('.f-partida').value } : null);
+    if (it) it.row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  addItem();
+  recalcTotals();
+
+  // ====== validación y envío ======
+  function mark(elm, bad) { elm.classList.toggle('invalid', !!bad); return !bad; }
+  function validate() {
+    var ok = true, first = null, msgs = [];
+    function chk(elm, bad) { if (!mark(elm, bad)) { ok = false; first = first || elm; } }
+    chk($('f-solicitante'), !$('f-solicitante').value.trim());
+    chk($('f-autoriza'), !$('f-autoriza').value.trim());
+    chk($('f-contacto'), !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('f-contacto').value.trim()));
+    chk($('f-empresa'), !$('f-empresa').value);
+    chk($('f-cc'), !$('f-cc').value);
+    chk($('f-fecha-sol'), !$('f-fecha-sol').value);
+    chk($('f-metodo'), !$('f-metodo').value);
+    var tipo = document.querySelector('input[name="tipo"]:checked');
+    $('tipo-group').classList.toggle('invalid-group', !tipo);
+    if (!tipo) { ok = false; first = first || $('tipo-group'); }
+    var clabe = $('f-clabe').value;
+    if (clabe && clabe.length !== 18) { chk($('f-clabe'), true); msgs.push('La CLABE debe tener 18 dígitos.'); }
+    var nItems = 0;
+    items.forEach(function (it) {
+      var q = it.q;
+      chk(q('.f-obra'), !q('.f-obra').value);
+      chk(q('.f-partida'), !q('.f-partida').value);
+      chk(q('.f-proveedor'), !q('.f-proveedor').value.trim());
+      chk(q('.f-fecha'), !q('.f-fecha').value);
+      chk(q('.f-desc'), !q('.f-desc').value.trim());
+      chk(q('.f-pu'), !(num(q('.f-pu').value) > 0));
+      var noFiles = !it.xml && !it.files.length;
+      it.q('.drop[data-kind="pdf"]').classList.toggle('invalid', noFiles);
+      if (noFiles) { ok = false; first = first || it.row; }
+      if (it.dup) { ok = false; first = first || it.row; }
+      nItems++;
+    });
+    if (items.some(function (it) { return !it.xml && !it.files.length; })) msgs.push('Cada comprobante necesita al menos un archivo (XML, PDF o foto).');
+    if (items.some(function (it) { return it.dup; })) msgs.push('Hay facturas repetidas (mismo UUID).');
+    if (!ok) {
+      flash(['Revisa los campos marcados en rojo.'].concat(msgs).join(' '));
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return ok;
+  }
+
+  function collect() {
+    var t = recalcTotals();
+    var tipo = document.querySelector('input[name="tipo"]:checked');
+    return {
+      fechaRegistro: new Date().toISOString(),
+      empresa: $('f-empresa').value,
+      solicitante: $('f-solicitante').value.trim(),
+      autoriza: $('f-autoriza').value.trim(),
+      contacto: $('f-contacto').value.trim(),
+      noProveedor: $('f-noprov').value.trim(),
+      centroCostos: $('f-cc').value,
+      fechaSolicitud: $('f-fecha-sol').value,
+      semana: weekNum($('f-fecha-sol').value),
+      folioSolicitud: $('f-folio-sol').value.trim(),
+      tipoComprobacion: tipo ? tipo.value : '',
+      metodoPago: $('f-metodo').value,
+      banco: $('f-banco').value,
+      clabe: $('f-clabe').value,
+      observaciones: $('f-obs').value.trim(),
+      montoSolicitado: t.sol, montoComprobado: t.comp, diferencia: t.diff,
+      importeLetra: letras(t.comp),
+      items: items.map(function (it, i) {
+        var q = it.q, c = it.cfdi || {};
+        return {
+          linea: i + 1,
+          obra: q('.f-obra').value, partida: q('.f-partida').value,
+          proveedor: q('.f-proveedor').value.trim(), rfc: q('.f-rfc').value.trim(),
+          folioFactura: q('.f-folio').value.trim(), fechaFactura: q('.f-fecha').value, frente: q('.f-frente').value.trim(),
+          descripcion: q('.f-desc').value.trim(),
+          cantidad: r2(num(q('.f-cant').value)), precioUnitario: r2(num(q('.f-pu').value)), subtotal: r2(num(q('.f-sub').value)),
+          iva: r2(num(q('.f-iva').value)), retIsr: r2(num(q('.f-risr').value)), retIva: r2(num(q('.f-riva').value)), otros: r2(num(q('.f-otros').value)),
+          total: r2(it.total || 0),
+          uuid: c.uuid || '', receptorRfc: c.receptorRfc || '', cfdiTotal: c.total || 0, metodoPagoCfdi: c.metodoPago || '', formaPagoCfdi: c.formaPago || '',
+          archivos: [it.xml].concat(it.files).filter(Boolean).map(function (f) { return { nombre: f.nombre, tipo: f.tipo, mime: f.mime, b64: (f.dataUrl || '').split(',')[1] || '' }; })
+        };
+      })
+    };
+  }
+
+  var form = $('comp-form'), overlay = $('overlay'), submitBtn = $('submit-btn');
+  form.addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    if (!validate()) return;
+    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('http') !== 0) { flash('El formulario aún no está conectado al servidor de Administración.'); return; }
+    submitBtn.disabled = true; overlay.hidden = false; $('overlay-text').textContent = 'Preparando archivos…';
+    try {
+      await Promise.all(items.reduce(function (a, it) { return a.concat(it.files.map(function (f) { return f.ready; })); }, []));
+      var data = collect();
+      var body = JSON.stringify(data);
+      if (body.length > MAX_TOTAL_BYTES) throw new Error('Los archivos suman más de 30 MB. Reduce el tamaño de los PDF o divide la comprobación en dos.');
+      $('overlay-text').textContent = 'Enviando comprobación…';
+      var res = await fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: body });
+      var out = await res.json();
+      if (!out || !out.ok) {
+        if (out && out.error === 'uuid_duplicado') {
+          var dupMsg = (out.duplicados || []).map(function (d) { return d.uuid.slice(0, 8) + '… ya registrado en ' + d.folio; }).join('; ');
+          throw new Error('Una o más facturas ya fueron comprobadas antes: ' + dupMsg + '.');
+        }
+        throw new Error((out && out.message) || 'El servidor no pudo registrar la comprobación.');
+      }
+      showConfirm(out.id, data);
+    } catch (err) {
+      flash((err && err.message ? err.message : 'No se pudo enviar.') + ' Tus datos siguen aquí: intenta de nuevo.');
+    } finally {
+      submitBtn.disabled = false; overlay.hidden = true;
+    }
+  });
+
+  function showConfirm(folio, d) {
+    $('confirm-id').textContent = folio;
+    var rows = [
+      ['Comprueba', d.solicitante], ['Empresa', d.empresa], ['Centro de costos', d.centroCostos], ['Tipo', d.tipoComprobacion],
+      ['Monto solicitado / pagado', money(d.montoSolicitado)], ['Monto comprobado', money(d.montoComprobado)],
+      [d.diferencia > 0 ? 'Por comprobar / devolver' : d.diferencia < 0 ? 'A reembolsar' : 'Diferencia', money(Math.abs(d.diferencia))]
+    ];
+    $('confirm-summary').innerHTML = rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('');
+    $('confirm-table').innerHTML = '<thead><tr><th>#</th><th>Proveedor</th><th>Folio</th><th>Fecha</th><th class="r">Total</th></tr></thead><tbody>' +
+      d.items.map(function (i) { return '<tr><td>' + i.linea + '</td><td class="wrap">' + esc(i.proveedor) + '</td><td>' + esc(i.folioFactura || '—') + '</td><td>' + esc(i.fechaFactura) + '</td><td class="r">' + money(i.total) + '</td></tr>'; }).join('') + '</tbody>';
+    form.hidden = true; $('confirm-view').hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  $('reset-link').addEventListener('click', function (e) {
+    e.preventDefault();
+    var keep = { solicitante: $('f-solicitante').value, autoriza: $('f-autoriza').value, contacto: $('f-contacto').value, empresa: $('f-empresa').value, cc: $('f-cc').value };
+    form.reset(); items.forEach(function (it) { it.row.remove(); }); items = [];
+    $('f-solicitante').value = keep.solicitante; $('f-autoriza').value = keep.autoriza; $('f-contacto').value = keep.contacto; $('f-empresa').value = keep.empresa; $('f-cc').value = keep.cc;
+    $('f-fecha-sol').value = todayISO(); updSemana(); addItem(); recalcTotals();
+    $('confirm-view').hidden = true; form.hidden = false; window.scrollTo({ top: 0 });
+  });
+  document.addEventListener('input', function (e) { if (e.target.classList && e.target.classList.contains('invalid') && String(e.target.value).trim()) e.target.classList.remove('invalid'); });
+  document.addEventListener('change', function (e) { if (e.target.name === 'tipo') $('tipo-group').classList.remove('invalid-group'); if (e.target.classList && e.target.classList.contains('invalid') && e.target.value) e.target.classList.remove('invalid'); });
+})();
+</script>
+</body>
+</html>
