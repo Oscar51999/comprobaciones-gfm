@@ -102,6 +102,19 @@
 
   .money-row { display: grid; grid-template-columns: 1fr 64px; gap: 8px; align-items: center; }
   .money-row .cur { font-size: 13px; color: var(--ink-soft); }
+  .bank-box { border: 1px solid var(--border); border-left: 4px solid #234067; border-radius: 10px; padding: 16px 16px 14px; margin-bottom: 18px; background: var(--paper); }
+  .bank-box input, .bank-box select { background: var(--surface); }
+  .bank-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .bank-title { font-family: 'Barlow Condensed', 'Montserrat', sans-serif; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: .02em; }
+  .hint.ok { color: var(--success); } .hint.bad { color: var(--critical); }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
+  .seg button { font: inherit; font-size: 12.5px; font-weight: 600; border: none; background: transparent; color: var(--ink-soft); padding: 9px 12px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button[aria-pressed="true"] { background: #234067; color: #fff; }
+  .venc { font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; }
+  .pdf-read { color: var(--success); font-weight: 600; }
+  .dl-btn { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-weight: 600; font-size: 14px; color: #fff; background: #234067; border: none; border-radius: 8px; padding: 12px 18px; cursor: pointer; text-decoration: none; margin: 0 10px 14px 0; }
+  .dl-btn:hover { background: #1A3150; }
 
   /* comprobantes */
   #items-wrap { display: flex; flex-direction: column; gap: 14px; }
@@ -291,15 +304,33 @@
           <select id="f-metodo" required><option value="" disabled selected>Selecciona</option></select>
         </div>
       </div>
-      <div class="row2">
-        <div class="field">
-          <label for="f-banco">Banco <span class="opt">(para depósito)</span></label>
-          <select id="f-banco"><option value="">Selecciona tu banco</option></select>
+      <div class="bank-box" id="bank-box">
+        <div class="bank-head"><span class="bank-title">Datos bancarios para depósito</span><span class="badge" id="bank-badge">Opcional</span></div>
+        <p class="hint" id="clabe-hint" style="margin:0 0 14px">Solo si hay un reembolso a tu favor.</p>
+        <div class="row2">
+          <div class="field">
+            <label for="f-titular">Titular de la cuenta</label>
+            <input type="text" id="f-titular" placeholder="Nombre como aparece en el banco" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="f-clabe">CLABE interbancaria <span class="opt">(18 dígitos)</span></label>
+            <input type="text" id="f-clabe" inputmode="numeric" maxlength="18" class="mono" placeholder="000000000000000000" autocomplete="off">
+            <p class="hint" id="clabe-check"></p>
+          </div>
         </div>
-        <div class="field">
-          <label for="f-clabe">CLABE interbancaria <span class="opt">(18 dígitos)</span></label>
-          <input type="text" id="f-clabe" inputmode="numeric" maxlength="18" class="mono" placeholder="000000000000000000">
-          <p class="hint" id="clabe-hint">Solo si hay un reembolso a tu favor.</p>
+        <div class="row2">
+          <div class="field">
+            <label for="f-banco">Banco</label>
+            <select id="f-banco"><option value="">Se detecta con la CLABE</option></select>
+          </div>
+          <div class="field">
+            <label for="f-cuenta">No. de cuenta / tarjeta <span class="opt">(opcional)</span></label>
+            <input type="text" id="f-cuenta" inputmode="numeric" maxlength="20" class="mono" autocomplete="off">
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Carátula bancaria <span class="opt">(PDF o foto del estado de cuenta donde se vea titular y CLABE)</span></label>
+          <label class="drop" data-kind="pdf" id="caratula-drop"><input type="file" id="in-caratula" accept="application/pdf,image/*"><span class="ico">PDF</span><span class="txt"><strong>Subir carátula bancaria</strong><span id="caratula-name">Toca o arrastra el archivo</span></span></label>
         </div>
       </div>
       <div class="field" style="margin-bottom:0">
@@ -311,7 +342,7 @@
 
   <div class="card" id="card-items">
     <p class="section-title"><span class="section-num">2</span>Comprobantes</p>
-    <p class="section-hint">Agrega un renglón por cada factura o ticket. Si subes el <b>XML del CFDI</b>, proveedor, folio, fecha e importes se llenan solos.</p>
+    <p class="section-hint">Agrega un renglón por cada factura o ticket. Si subes el <b>XML del CFDI</b>, proveedor, folio, fecha de emisión e importes se llenan solos; del <b>PDF de la factura</b> se lee la fecha de emisión y el folio fiscal.</p>
     <div id="items-wrap"></div>
     <button type="button" id="add-item-btn">+ Agregar comprobante</button>
   </div>
@@ -340,6 +371,8 @@
     <p id="confirm-text">Tu comprobación ya llegó a Administración. Guarda este folio para darle seguimiento.</p>
     <dl class="confirm-summary" id="confirm-summary"></dl>
     <div class="tbl"><table id="confirm-table"></table></div>
+    <button type="button" class="dl-btn" id="dl-pdf">⬇ Descargar formato FO-GF-01 (PDF)</button>
+    <p class="hint" id="pdf-status" style="margin:-6px 0 14px"></p>
     <a href="#" id="reset-link">Enviar otra comprobación</a>
   </div>
 
@@ -364,6 +397,7 @@
   var IMG_MAX_SIDE = 1800, IMG_QUALITY = 0.75;
 
   var CAT = {"cc": ["101 - CAMPAMENTO TRABAJADORES LA RIBERA", "102 - PROPIO DEPAS SANTA CRUZ LA RIBERA", "103 - REMODELACIONES Y ADECUACIONES OFICINAS", "104 - PRIVADO DEPAS VISTA CORTES", "105 - CAPUFE MODERNIZACION CASETA QRO", "106 - PRIVADO DEPARTAMENTOS CIAN", "107 - PRIVADO CASA BELLAVISTA", "108 - PRIVADO CIAN ALBAÑILERIA", "109 - CPMA MONTAGE MOV TIERRA", "110 - PROYECTOS ANTERIORES (HISTORICO) FIRME", "111 - BECK-OMNI INFRAESTRUCTURA PLUVIAL FIRME", "112 - CASA MURICA", "113 - CASA ANHELO", "114 - TALLER CJR OFICINAS LA CURVA", "115 - ACTIVOS FIJOS RENTA-REMODELACION", "116 - CPMA DUNNA", "117 - ADMINISTRACION DE PROYECTOS MENORES", "118 - ACADEMIA DE PROTECCION FEDERAL ECATEPEC", "119 - ICIFED CENTRO COMUNITARIO ARBOLEDAS", "120 - TERRACERIAS FS EVENT SPACE", "121 - MOVIMIENTO DE TIERRAS OASIS", "122 - JN NUEVA CREACION - ICIFED", "123 - CISTERNA SCA", "124 - REHABILITACIÓN OBRA PLUVIAL - REA NL", "125 - MOVIMIENTO DE TIERRAS MONTAGE CTTO 2", "126 - REMODELACION OFICINAS ASP", "127 - CONSTRUCCION ESTRUCTURA ENTREPIEDRAS", "128 - TRABAJOS REPARACIONES B HERMANOS", "129 - CONSTRUCCION PUENTE LA PRESA", "130 - CONSTRUCCION CUARTEL", "131 - ALBAÑILERÍAS EXTERIORES NAYAMA COPACHISA", "132 - PAVIMENTACION CALLES COZUMEL", "134 - MANTENIMIENTO CLINICAS IMSS BIENESTAR", "135 - REMODELACIÓN OFICINAS GAP TIJUANA", "136 - CASAS ENTREPIEDRAS", "137 - MODERNIZACIÓN P.I.V. \"PRECUOTA\", KM. 90+819", "140 - CONSERVACIÓN DE PAVIMENTOS EN PISTA", "141 - TERRACERIAS JARDIN RANCH", "143 - DISTRIBUIDOR VIAL TLAPACOTA", "144 - DEMOLICIÓN Y PLATAFORMAS AEROPUERTO TIJUANA", "145 - REHABILITACIÓN PLANETARIO", "A01 - GASTOS ADMINISTRATIVOS FIRME", "ADM - AREA ADMINISTRATIVA", "CI1 - COSTOS INDIRECTOS NUEVO LEON", "CI2 - COSTOS INDIRECTOS NAYARIT", "CI3 - COSTOS INDIRECTOS LA RIBERA", "CI4 - COSTOS INDIRECTOS LOS CABOS", "CI5 - COSTOS INDIRECTOS COLIMA", "CI6 - COSTOS INDIRECTOS QUINTANA ROO", "CI7 - COSTOS INDIRECTOS TIJUANA", "CI8 - COSTOS INDIRECTOS LA PAZ", "CI9 - COSTOS INDIRECTOS MEXICO", "CV1 - COSTOS VARIABLES FIRME", "DGA - DIRECCION GENERAL ADJUNTA", "F&F - F&F", "FNZ - FINANZAS", "GC1 - GASTOS COMERCIAL FIRME", "MCC - MULTICENTRO DE COSTO", "MOD - MANO DE OBRA DIRECTA", "OTE - OFICINA TECNICA", "PY1 - PROYECTOS ANTERIORES FIRME", "RRH - RECURSOS HUMANOS", "UT1 - UTILIDAD FIRME"], "obras": ["101 - CAMPAMENTO TRABAJADORES LA RIBERA", "102 - PROPIO DEPAS SANTA CRUZ LA RIBERA", "103 - REMODELACIONES Y ADECUACIONES OFICINAS", "103-1 - CENTRO FIRME", "103-2 - ADECUACIÓN OFICINAS FELIX ORTEGA", "104 - PRIVADO DEPAS VISTA CORTES", "105 - CAPUFE MODERNIZACION CASETA QRO", "106 - PRIVADO DEPARTAMENTOS CIAN", "107 - PRIVADO CASA BELLAVISTA", "108 - PRIVADO CIAN ALBAÑILERIA", "109 - CPMA MONTAGE MOV TIERRA", "109-1 MOVIMIENTO DE TIERRAS MONTAGE RESIDENCIAS", "109-2 MALLA PERIMETRAL MONTAGE", "109-3 MOVIMIENTO DE TIERRAS MONTAGE RESIDENCIAS", "110 - PROYECTOS ANTERIORES (HISTORICO) FIRME", "111 - BECK-OMNI INFRAESTRUCTURA PLUVIAL FIRME", "112 - CASA MURICA", "113 - CASA ANHELO", "114 - TALLER CJR OFICINAS LA CURVA", "115 - ACTIVOS FIJOS RENTA-REMODELACION", "116 - CPMA DUNNA", "117 - ADMINISTRACION DE PROYECTOS MENORES", "117 - 1 - ALTELUS", "118 - ACADEMIA DE PROTECCION FEDERAL ECATEPEC", "119 - ICIFED CENTRO COMUNITARIO ARBOLEDAS", "120 - TERRACERIAS FS EVENT SPACE", "121 - MOVIMIENTO DE TIERRAS OASIS", "122 - J.N. NUEVA CREACIÓN VILLAS PALMANOVA - ICIFED", "122-1 J.N. NC 2027-2025 (CANCHA DEPORTIVA)", "123 - CISTERNA SCA", "124 - REHABILITACIÓN OBRA PLUVIAL - REA NL", "125 - MOVIMIENTO DE TIERRAS MONTAGE CTTO 2", "125 - 1 MOVIMIENTO DE TIERRAS MONTAGE CTTO 3", "126 - REMODELACION OFICINAS ASP", "127 - ENTRE PIEDRAS", "127-1 CONSTRUCCIÓN MURO ENTRE PIEDRAS", "127-2 SUMINISTRO MATS MURO ENTRE PIEDRAS", "127-3 SUMINISTRO MATS ESTRUCTURA ENTRE PIEDRAS", "127-4 INSTALACIONES GIMNASIO", "127-5 INSTALACIONES ACCESO ENTREPIEDRAS", "127-6 INFRAESTRUCTURA PLUVIAL ENTREPIEDRAS", "127-7 TERRACERIAS TORRE 1 ENTREPIEDRAS", "127-8 SUMINISTRO MATS TORRE 2", "127-9 ESTRUCTURA TORRE 2", "128 - TRABAJOS REPARACIONES B HERMANOS", "129 - CONSTRUCCION PUENTE LA PRESA", "130 - CONSTRUCCION CUARTEL", "130 - 1 REHABILITACION PARQUE OXTANKAH", "131 - ALBAÑILERÍAS EXTERIORES NAYAMA COPACHISA", "132 - PAVIMENTACIÓN CALLES COZUMEL", "134 - MANTENIMIENTO CLINICAS IMSS BIENESTAR", "135 - REMODELACIÓN OFICINAS GAP TIJUANA", "135-1 - VIALIDADES PROVISIONAL GAP TIJUANA", "136 - CASAS ENTREPIEDRAS", "136-1 SUM DE MATERIALES CASA TIPO ENTRE PIEDRAS", "137 - MODERNIZACIÓN P.I.V. \"PRECUOTA\", KM. 90+819", "140 - CONSERVACIÓN DE PAVIMENTOS EN PISTA", "141 - TERRACERIAS JARDIN RANCH", "143 - DISTRIBUIDOR VIAL TLAPACOTA", "144 - DEMOLICIÓN Y PLATAFORMAS AEROPUERTO TIJUANA", "145 - REHABILITACIÓN PLANETARIO", "A01 - GASTOS ADMINISTRATIVOS FIRME", "ADM - AREA ADMINISTRATIVA", "CI1 - COSTOS INDIRECTOS NUEVO LEON", "CI2 - COSTOS INDIRECTOS NAYARIT", "CI3 - COSTOS INDIRECTOS LA RIBERA", "CI4 - COSTOS INDIRECTOS LOS CABOS", "CI5 - COSTOS INDIRECTOS COLIMA", "CI6 - COSTOS INDIRECTOS QUINTANA ROO", "CI7 - COSTOS INDIRECTOS TIJUANA", "CI8 - COSTOS INDIRECTOS LA PAZ", "CI9 - COSTOS INDIRECTOS MEXICO", "CV1 - COSTOS VARIABLES FIRME", "DGA - DIRECCION GENERAL ADJUNTA", "F&F - F&F", "FNZ - FINANZAS", "GC1 - GASTOS COMERCIAL FIRME", "MCC - MULTICENTRO DE COSTO", "MOD - MANO DE OBRA DIRECTA", "OTE - OFICINA TECNICA", "PY1 - PROYECTOS ANTERIORES FIRME", "RRH - RECURSOS HUMANOS", "UT1 - UTILIDAD FIRME"], "partidas": ["1 - MATERIALES", "2 - MANO DE OBRA", "3 - INVENTARIO / AF", "4 - SUBCONTRATOS", "5 - INDIRECTOS", "6 - ADMINISTRATIVOS", "697 - INDIRECTOS", "699 - ANTICIPO PROVEEDORES", "699 - FONDO DE GARANTIA", "7 - GASTOS DE VENTA", "198 - MATERIALES", "298 - MANO DE OBRA/DESTAJOS", "498 - SUBCONTRATOS", "598 - INDIRECTOS", "698 - GASTOS OPERATIVOS ADMINISTRATIVOS", "798 - GASTOS OPERATIVOS VENTA"], "bancos": ["AUTOFIN", "AZTECA", "B&B", "BAJIO", "BAMSA", "BANAMEX", "BANCO FAMSA", "BANCOMEXT", "9. BANCOPPEL", "BANJERCITO", "BANOBRAS", "BANORTE", "BANREGIO", "BANSEFI", "BANSI", "BARCLAYS", "BBASE", "BBVA BANCOMER", "BMONEX", "BMULTIVA", "BULLTICK CB", "CB ACTINVER", "CB INTERCAM", "CB JPMORGAN", "CBDEUTSCHE", "CI BOLSA", "CIBANCO", "CLS", "COMPARTAMOS", "CONSUBANCO", "HSBC", "INBURSA", "INTERBANCO", "INVEX", "IXE", "JP MORGAN", "SANTANDER", "SCOTIABANK", "STP", "VE POR  MAS", "SABADELL", "N/A"]};
+  var LOGO_DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA3cAAAD6CAYAAAAC9b6NAAAsK0lEQVR4nO3dT47bSPrm8ScGRq0GSP1OkOoTpBoze7MOULD6BJaB2Vt9AssnKNUJrDxBqWYOUMx9Ac08QStP0MrlzCZmwZAty6TE/y//fD+AUJWUSL6WKIoPIxh03nu1xTm3aW3hQHcO3vtdmRmcc3NJqzaK6Yr3fmNdQx7n3EzS4mJy4r0/dl4MBsU5F11MOnrvk+4rAXAu/G7OLyazXwdKci2Hu/YWDnTnyXsflZkhHED+2UYxXfHeO+sazoX3dCVpKeku52UvkmJJ2yYP2J1zK/140FHEUVLcVC3hPYgyntp57w8ll7XJmNz1iYzYex9XnLeQs/qWkh6uvPRJ0k7Svo8HkzW2wTyltpkr295XVU4Itbjclaq9Xwel2+WhwrxZdUS68e/LcVSD+45Qy0oNbkNNnAB0zi2Vfj8jXd+v75Xu1w9113mllk2Bl5Xe115Z30o9+F25Ukvp34Mb69gUeNm2qf1v3vvb5xPXjfHet/aQ5HnwGMEjrrDtRz2ou9ajzX1DyfdyoTSwlf037CXNGqqhyvrPHwdJqwbq2OQsP2po/2yxrR/Dv6uRz+qsrpmkbcV61tbbfQvbYK1t5sq2d/5YVPh37W8t1+j9iqt8ryq+b7f2HZs+bkM1a1lISiqsd6uG9xWhnnnB9a979J1ue9uIG/y3Lgr+m5Ztv79Nbzt9fPw3AUBPhTNv/5L0tsLs7yQdnHOLJmuq6F7SF+dcElqS8M2dpE9KP6tlEwsM3XZjSR8r1vOrc24floPiogrzvGu6iIa8lfSnc25nvB3cS/oU9h0LwzoaE/brsa63pOf5KClu4TNZFHxd1PB66xjSthE1/DpcQbgD0EvhAOBLzcXcKT0QWNQuqBkPkobwQ2zhTtLv4XOv7CzYVTlwPPdOaasSiovKvDjj+sc+eq90e7L2oH7tyyoJ9X9RfhfMIk7vxayJmoKo4OsWDa6zKUPYNqKGX4crCHcAeufsAOCaV6XXST3deN2dpD61wtwpvbYL2b7UPEjZ63awe1a63bzceN1b59y2Ri1TU7YVbtlGES146Ml20Ld9WRX7G8+f79dfr7zuQWkXzaZEObVcuu9p74u+bxtRxrSs97fuSTlIemNdAABk2F557g+l1xkk5xNDINgo+wDzXtI6PN+kn688N1c6UEBWl9IH59zGj/vC7kflh9iZ0gP79znPb1XhDG5o9cvrwvuidLv5rqZwMLQOj6zWhI/Oub1veeCXGq5tg9ckDaz7VRfvmXNu6b3fF5w/uvj7Rel3tU3X3q+F0u0gq4amt4Oq+46m92XPYXmtC9/PvM/3Sen3M76YJ1L6b816L94753Z1P5OwD8gKFTtld+2O1O4Jur5sG40Iv81Z+9adMt5f51zU4/3tMLR5QZ8avHCXBw/DR+mLisWAKnX2G9feu1WB+Vc58x5V8UJ81bgwW+mPbWY9FerY5Cwramj/3OS2vikw7yJ8Lk39mw45y9rf+uyVHjQlefNbfR+a2AYbWn/WthdnvOfbgsubZSxv19S/ser7FerKrKPKdpD3nS047yqnjuOt7bnEexJ3uA3lfb92BebN+0xuzltg2cucZUfK3j/VXmedbXRo28aVWuc50zfW7+/QH3TLBNA3q5zpn32BYZnDa37LeOpOBt3AvPdbpa2Nl+6aGkBkqHza+rrOeXpZZlnhvbzPeOpF6UmB441aDmGdWV2F3vW0K1YfxBd/RwXnWxZYVufCdrJWdpfdd112ewv7sseMp+40sGuTwvfnIeOpFxVoOfTer5T9mSxrlHWyyFlnrOxtMmpgnbUMbNuIMqa9hH1u1mUVWa9HCYQ7AH2zzJj2qnLXV2yUfZAela6mGZuc6YsOa+ilcJDSxGeV9/r1rWB3VstB+dtZ2XqmIr74+6FgEI4u/n5W2gpoLmwvu5ynF50VktrkTI86rKEJ85zp+6LfT2V/N+8aGEgkyph2Ch1JxnP3Pbm2bZMzfdFhDUVEGdOSi/+ee9tWIVNBuAPQG+Gg8C7jqTIHAKeDszjjqXmFsmrz+TebXXRYRp8lGdOyzvJfs8iY9uqLX/91kvf6rOUj+/2KCsy3vPg7rllH0+Kc6YsOazidcMiy6LCMJixypu9LLCPJmT4rsYwsWWHitK44Z56o5jpru7JtRB2WcVX4Tc/qURGH/yY580Vt1DMVhDsAfTLPmX6osKwkY9qiwnLaNLMuYEQWGdOSsgshiJcTTqQ8X0yOrs2TM8DCvqmaWjazLmCgZnUX4FsYZONKiIhvrDNvPnwvypmehP/GOc8vGq5jUgh3AKYkq1UQ48Bnaye++Ht54/XR5YQ2DtwxCIuSr3/KeBxrrD/KmZ6c/f/lyYtr8+F7i6yJp+97aH3s0yUUo8CtEACM1UG374EHoL69vh/S/M45t7jSCrq8+DtrwCGMS5IzfakS11N776P6pXwna3kvF10eY/3YTbxst/GpijKmXf4ux/rxFkZZ86EgWu4AjJL3fue9jy4f1nUBYxPOwl+efV9mvTYMRHF5jVPcdE3onUPO9Lfh/ndWrl1vl/e3JK4Lu+XK/QOTG39LzQyUM1mEOwBo2ZWR1eIOy+izWca0rK466K/44u8o53VZ0y/n7YN5zvRDhzVck1gXUEZoxc26lYEkfXHObboegfJKeIhv/H0SNVRK0xLrAoIoZ3p84+9b8+MGwh0AtG+ZMz3psIZeunL/q6TbSlBTfPH325yD9eji75cr3TctRTnTkw5r0JVWraTDMpqyu/LcJ0mHEPLm3ZRT7DPu63VhA9g2opzpyfkfV663XTRXyrRwzR0AtCgc4G4ynnpVP1ssurbNmb7vsIbBcs5tys7jvS89TwF7Sb9eTIv04+e4vPg7bqGWWkJ3u/cZT3UaRK/sO6Tmvh/zCtvQIdyfshTv/cY5t1T+9Wp3SkPeJ+fcs9IwuL8y5H9dUdbEnLAR68frwszux9bRtlFXlDHt8nrGk2f9uF1kzY8CCHcA0JJwkLhV9n1+St27b2zCwclOPx4wney6qmXgPlWYZ9N0Ed77g3PuRd9v60udHWjm3PNqrx4JrSHbnKd3HdaxCOvL2nc8NrjvuFf5behJ1d+LpdKglPXvOveg9GTBr2G72knaNRz0ooxpeYNwJcrYVznnoq5Heu1w26irTI+MOOP19865eYvhfrQIdwAGzTm3VYnuG00PquKcWyu72+VM+WeoXyWtm6yjh1Y3Bhy4dtb7c48OUFBcrO9bvKKL55c583TGOXdtfXPlh45XlRjVsWAtK0mrjKdmur7v2DRZR5fCSYCF0lBftOXrFEA/OeceJW3qHvDn3GtRyt8eY2WH4MWVeSob+rZx6/6BGZKc6ZE40Vca4Q7A0C1k2D1G2d3RbokmEF7udfvsfJbnlroNon17fR/uLs+8Rxevfzb4HlTdVyxbqHWvNDCWuUfjaugtGeF9jEKA2ajcfuK9pKVzbuO939YoI8qZnmRN9N7Hzrm85dSpI0+sYW8bUc70JGd6fGU5u1qVTBADqgBADeHH9HPBl79K+ntPB5Dog2dxncWQxRnTlmf/H108t2+pjqZ9aKPrXQg524Ivf5X0D+/9vuk6rITb1cwl/SzpUcVHyL1T2l1zV2P1i5zp8ZV5OruZefhd2RZ8eR+3jShrYt736MqgNYumCpoSWu4AoL6t0i40185AP0paT6DFrqrPtNhV8rN1ASfe+6Nz7knft45Fkrahm9ZlK0TcSWHVPSn9ziZtrSAMMrLS7X1H7a6IOZ5Vvov4sckCwgF/LElhwJXT41ar1Xvn3KHifiPKmPZyY/8c68cukXfOuUUb20gPto06slrI865nPIn143WND865Gb+b5RDuAAxdkjN9rmrdAksLB7VrSb9nPP0qac6PU6Ynpa03bY6IN2pdD+ZQQKzvD+xOB2vRxetee1i7lN6LLVY6eEfc0TpXkv7MmN7FvuPYp88htD7tpa/Xba2UPXLpySfnXKmBVnIG9pFun2xIcqZHV56rayW7baOSK9fbJTdmTZQ9wFak4bTy9wLdMgEMmvd+7b2PLh/quJ9+OCjJOjN5p+wL48fus/fe3XhE3vstwW5U9pcTwsHe8mJy3HolGQpsk3Pv/arLwBPWlbfvWHdVR99472Pv/UrS35XdJfJkXXLRUc705MZ8cc70Rcn1FzbQbSPKmR7fmC/v+bzlIQctdwDQnLWkf2VM3zjnaJ3C6HnvE+fcq77vUrfSj93Z9l3VNBArSf/OmF66ZWpswjYVKbtbpFT+4D/v9Ysq942ssP6yVhrWtrHImR6FUUqbWh5yEO4AoCHhIOQ3SR8vnrpTel3esuuaAAOxvu9eldWtLu6kkoEItwj4rOzh9neaeOtF6Pq+VHbIybs1QJ5FzvRr3T+vafV+bAPcNqKc6Ze/i0VZjoY9SHTLBIBmbZQ96te7cHACjN3+xvMvPWxt6IOt0mv+Lr0NA2sMlnNu65yLLx6rMssI20zmoBzOuVnBOmYqHwaLiFpY5rmtBrBtXLl/YN3lRk0vc8wIdwDQoHCB+zrn6W3RgxBgwOIbz+87qGFwwr5jk/P00PcdC6UtMOePeYXlxFeWX0RUYZ2Wy5U0qG0jGthyR4lwBwAN897vlD0AwL3yf6CLSHKmz2sscyyy3u952YVcOUg6lF3WVIUWlmsDYMTdVDI8Yd+RN4DGttNi2jevMM8sZ3pScP6owjqLWLS03K8Gsm1EA1vuKHHNHYAhiCrMs2y4hrLWyh7C+mO4CD6psMxDzvRIJUYHvdI9NC5TTM8c9GN3qyrXwiyvLB/FbVTtRtHIH5jpfdh3xN2W05qoqXlK3BIgb51l7he51Y/7mq7ux7ZWv7eNRc70Mu/vXj927eS6uxIIdwD65Jgz/W2Zg/TQ77+N6yoK897HzrlHZV+kv1OFM705IxFK0rLkgcU6Z3pStqYeiZV9j6SNyt2KYp0zfV+mmKk7v18ZyrkyMJOU7jvmnRbUjFg/HqDfO+eiooEk3J8ua79+rZX4fP5ZzvwvZUKRcy7OWU6klrf5Pm8bV+4f+FTh/f1hX97WzeLHiG6ZAHrjxo57V2QZ4Qe80Gs7sFH24CoP4abnVewzpt2p+PuzUvZZ0NdwQD5U+5zp74sOOOCc2yr/4C+pVBVQzUbZ+477isP1W9vnTC9zvdguZ3pccP5FzflPkpzpUcnlVLVRP7eNKGd6XHI5Scnl4wLhDkDf/JEz/a1zbn/tQCA8Fys9QM/68etUaGnc5jy9CWc6y9rlTH9X4P3ZSPqS8/S2Qi29Ed7rx5ynv1wL0865mXNup/yhund1agPKujGAxqeK+w4z4eRI1miPD5Lia6MhOufmoTUnr2vermAZeetICs5/EpdcfqN6vG1EOdOTksuJSy4fF+iWCaBv9sruXqcw/RAOxPdKr4OahcdSafe7O6XBbqfq99VpjPd+E1qOLrurVLr3Xeju+Yey36N3kv4TuoMm4TFXesZ6mVHDyasGHu6CjdJ/Z9ZQ3L+GgLdX+r4clL4viyvzSNKz937TWIUNCwe9Vaxpjew37/027DuyWpN3auZgd1F1G/Lel13/WtLvGdMfJP3pnHvWt+/nUem/b6H83wNJ+qPEdhzlTI8Lzi/p633nsrrHd3YpQEfbRll560zKLCT8xpVZfikVt/fEe79uYv1dINwB6BXv/S4chOf9UN4pDW3XgttG+aOqWVgpe3CVdxWvI1gp/cHMC2vvVe6GvKsOBgJoXTjoWiu/dfJe5QL/q8pdr2eh6kADsyaLQGvWyt53vC1zvdoVd+posArv/f7KdchSus8vE5DKfj8z/50VT3LEyr4urInPpKi12t02ysr6Pap6T8sn/fh5NXX/vNEPzkK3TAB9tFL1bpWP3vttc6XUF35kM2++qwoH2SGILdVM19MPA7/W7jthuPAPDSzqVVJE6xYshX1HXnfjwfHer9TMv+f0/TzWXE7efvmWuOZ6axvItpF0PB9EuAPQQ+GAOlL58PIYDh76aNXkwsJ7NFf1g5NXST+HMDQq4d/0D1UPv88i2KE/NurBNcRNCfvo32ososnvZ9VlNLHuJmzU720j7ng+iHAHoKfOwkuRM5MvSlugVi2WVEvomvK54WUew3UvH5Q9WEGW11DHvAf3RGpNaI2cK/23Fj34OW1HDLmN3rgxMNMgheuX/qZyLU9tfD/jKjP1Zd85gG0j6Xg+SHLe+/YW7lx7Cwe681T2wvEw8ldWX/jB8N5nXtFsIYz+tVR6cf08TD4qDBoypm6FdYT7+0X6NojKySE84r4clHQtfCcjpe/N/OypRN/em6TLmgB8HeU40rcBjmZnTyfi+wmUQrgDbiPcAQAAoPfolgkAAAAAI0C4AwAAAIARINwBAAAAwAgQ7gAAAABgBAh3AAAAADAChDsAAAAAGAHCHQAAAACMAOEOAAAAAEbgTcvL/7nl5bfpv0vaSvpfxnXA3rHCPImGvf0DAABgYJz33rqG3nHOzSTFkh689862GgAAAAC4jW6Z2faSHqyLAAAAAICiCHcXnHM7SW+t6wAAAACAMgh3Z0Kwe29dBwAAAACURbgLCHYAAAAAhoxwJ4IdAAAAgOGbfLgj2AEAAAAYg0mHO4IdAAAAgLF48//+z/+MJEXGddS1++mXvw5lZiDYAQAAABiTN0qD3SfjOup4JNgBAAAAmLqhd8t8/OmXv1ZlZiDYAQAAABijIYc7gh0AAAAABEMNdwQ7AAAAADgzxHBHsAMAAACAC0MLdwQ7AAAAAMgwpHBHsAMAAACAHEMJd1WC3UYEOwAAAAAT8ca6gAL+qBDsVhr2vfsAAGidc24haRYeiwKzHMJD3vu4jZqmyDk3lzQPf0YFZ4vDfw/e+0OjBWGwLralmYp9r88lko7h/9m2Bqjv4e5Z0qrMDCHYfWmjGAAAhigc8C3CI1J68Hdfc5mS9Kr0YPD0iDkYzOecmyl9/xeq/zl8PYkdPotnpcE7Ufo5xBWXi55zzkVKt5250m1pJultS+uSvn3Pj/r2XT9475M21ol63P/93/9jo362cj1Lin765a9j0RnaCHbee9fk8gCgL8KB5kLfDhKk4q0Gmbz3teZHc5xzS6Wf51I1g1xJL0pblfbe+32H6+2ls88hkvTQ8eqfJe2VfhZJx+tGA0LreqRvJ2e63oZueVb6fU/EyZ1e6Gu460Wwkwh3AMYjnO2N9O0gofEDfvaZtkKQOD3uLGsJXpWGi92UWpJ6+DlIaejeKf0sDralIE9oZY+UbjuR+rP9FPX15I7SsHe0LGaK+hjuehPsJA5UUE04iP7TuIxarLZ951yslrqXdOSz935jXYT0tWVuqQ4PEprYbpxzvolarHT93Qmf81rpZQxdttCV9SJpo7QV6WhbSvPCQflK/f8cJOlJ0mZKgbvPwrazVLrt9K1lrq4/9K31+GhbyjT0bbTMXgU7ABgi51wUbgXzH6X7x3ca3tlf3OCcm4WRoQ9KT9L2PVDcK90eD865TQilg+ecm4fv2781jM9BSk+g/emcS0IrIzoWvr8r51yidNv5VeMLdlL6+/NF0n+cc3u2t/b1KdwR7ACghnCgcFDaasytYEYqI9QNLbjfKa07Cb/jg3QR6ob6fXuQ9LtzLg49TtAy59zi4uTbGANdnndKt7fTCZ65dUFj1JdwR7ADgIrOQt0XDaPVABWF376DhhnqLt1L+hKCxdy6mKLOwnWi4Ya6S6eWvO1YWlT7JvSoiCX9S+PZbqq6V7oP+7dzbjek7/8Q9CHcEewAoALn3JJQNw2hlShW+lkPPdRdeqv0IG9tXcgtoXUr0TjCdZaPSrvNRsZ1jMZFj4ohX0/elvci5DXKOtwR7ACgpLMD/d9FqBu98LuXaPwHhr+GVryZdSGXQmvdVukB+ti/c3cKrXjWhQzZWUsdJ9+KIeQ1xDLcEewAoKTQupFo/Af6kxcCxU7jbK3L81Zpy9HCupCTUEustFVrSj6GAVdm1oUMSTj5thctdVW9V3o97mgGXeqaVbgj2AFACeFAP1Y6otpUDvQnK5y5jjXNa3PuJMV9GGwl1BBrWoNenHtQeqC9sC5kCM6uxXxnW8ngnQ+6FNmWMjwW4Y5gBwAlhB+3gzgLPAnhQDrRdAOFlB7cfbEMeOFAfUqtpnnulYbthXUhfRVGwEw03msxrdwr7SK8pxWvuK7DHcEOAEoI+8A/xQHDJIR7QMXi8z4xCXihO+ynrtfbY6fW1IV1IX0TTgL8S9M+GdO2d2Kgn8K6DHdVgl0kgh2AiTq73goTEELM7yLYXeo04IXv3RS7w95CwDtzNrAVJwG6wUA/BXUV7l5VPtgtJO1bqgcAeo0DzGmhl8pNnQQ8vnc3EfD03S0x6CrfPQb6uaGLcFc12MXi7CWACeIAc1rCbx7B7rYvbXbL4ntX2CngzawLsRBGLKarvK0H9WxU3T5pO9ydgl1SdAaCHYAp4wBzWs5+81DMvo0DOr53pU0y4IXt5FfrOiAp3Qb/1YdRdfumzXBHsAOAEjjAnJZwYLwXv3ll3EnaNRkqQksM37vyHiRtrYvowtmtaNhO+udL+A4jaCvcEewAoASC3STFSof6RjkPkjZNLCiMTkpLTHXvw3s4WuFEQiyur+uzX8NvKNROuCPYAUAJoVsJwW5CwohvDJ1e3ce619+FG8XvGqhl6nbhvRyds2DHd7X/3hPwUk2HO4IdAJTALV+mJ3zmH43LGIO63TP34tijCXcaYUgm2A0SAU/NhjuCHQCUcHbNFSaCz7xR96rYPTPceJqD9ua8HVP3TILdoE0+4DUV7gh2AFDeXuwDp2YnPvMmfSzbJTAcf3Dj6eZtxzB6JsFuFCYd8JoIdwQ7ACgptBxwgf6EhO6Y74zLGKNtydfvWqgBaUvq2rqIBuxEsBuD91O9TULdcEewA4CSaDmYrJ11ASP1rujgKnTHbN16yK13obWHEzDj8WWKAa9OuCPYAUA1O+sC0K0QKrjtQXtWt14Qum+u2y5k4u400PeYUYtHaxvyx2RUDXcEOwCogJaD6QktGWvjMsbufYFr7zbiGKQLg2u9C8eojFo8TneS9kPbJuuoEu4IdgBQAS0Hk7UWv39d2OQ9Eb57tMp0407S0rqIos4GUMF43WtCoxSXDXdVgt1MBDsAkNKBH9gXTgitdp1aXjk7v+mwDgxrm9+L/fIUvA09Z0bvTcnXL6cW7KayIYzMznt/sC4COMdIiZO11oB/Awfm1GK0O59Iq52JB+fcwnufWBdyjXNuLUYtnpJPzrnYex9bF9KmMuHuw0+//BWXXH6s4V9bwoh2wxNLOhjXAFzaWBeAbtFqZ2KpHwcs2nReBaR0kJu1cQ25QujfGJeB7u3CiYejdSFtKdot88NPv/y1q7D8oQc7AKgttNpxdnh6lqLVrmvvzrtm0mpnamldwA078f2conuNPNQXCXdVgx0AILWxLgAmNtYFTNTy7P9XRjVAuu/rEPR0x5y8j0XvjTlEt8IdwQ4AaqDVbprC58597Wwsz/5/ZVQDUkvrAi6Flt2NcRmwt7UuoC3Xwh3BDgDq21gXABMr6wImLJIk59xSBGxrkXUBGbaiOybSQX821kW0IS/cEewAoKZwvQ+tdtO0tC5gwu5Cd8CVcR3o2f4vtKhzDSZO1mO8uXlWuCPYAUAzNtYFoHvOuZVoGbC2FLce6YWeXdu0sS4AvXKnEW4Tl+GOYAcADQhnA5fGZcDG0roA0GrXI5F1ARLXPyPXx9DLZjTO73NHsAOA5ixF681URQ0t51VSovTencfw/1lmkhaS5uG/3Iao+Wvt+CyqW1gXEGysC0BvbTSiE0KncEewA4BmrawLgJk6of5F6YAPsfc+KTHf/vyPMJjI6cFJhmpqfxahBT/StD+LuXUBtNrhhvfOuY33/mBdSBPeSNr+9MtfR+tCAGAsGEgFFTxJ2njv4yYW5r3fK4SMcA3gRowcWVRjn4X3/qj0c9ifddXeaFqfRR9aLzfWBfTE08XfidLwPTubNte0ts+TjUZyUtZ579tbuHPtLRzI93NTB0hVhbOEf1rWUJf33lms1zkXa9jB6LPSblu/GtdhoontZmK/Hc+S1l3sswh5N3X9WWw1nZa8v5ds/WxMONn2b4t1G3pR2oU4OT3CiYbCwoizp0ekfoT0tv1X2fepj27dxBwAUN7KugAMwmfv/aKrk1He+53SA7XfuljfwFh8FnNJf3Sxvh6YGa57Y7juLr0o/W7/3Xs/996vvPdb731cJbB47xPv/c57v/beLyT9TdIHpSdBxmptXUATCHcA0Ky5pnGGE9W9Kj0A23S9Yu/90Xu/VnqQ9tr1+nvI+rNYSvpn1+s2MLdY6URGLX5S2mNpHoJY0sZKvPeHEPYWSoPeYxvrMbayLqAJhDsAaNbSugD02rOkhVUXtZPQchRp2gGvL5/FVuMP23Oj9S413q6vp1AXdX0pSgh6K40v5N2HwagGjXAHAM0a64EE6nuWFPVlRLYQaiKNO1Tk6dtnsRMnhtqwti6gBa+S/mER6i6dhbyflXYLHYOVdQF1vbn9EgCAsSelF8Ufz/6LYXmVtOrbxfre+yQMABVrOicm+vpZxM65D5K+WNfSgkXXKwwDqYyti/wf6u+2u1A6SNB722pqe+ecm/XtPS6DcAcA/fOsMHy6dZcxNGbZ188yBLyVpN+ta+lInz+LXThI/mhdS8NmButcGayzTZ8trg0tKoShlXMu0fBHi15K2hnXUBndMgGgPx6VDu6w8N5v+noAitI+W3efuiXcF28Ko2gO4bNYa9wjEnZlaV1Agz70OdidO7uGdMjW1gXUQbgDAHuPkv4Whq5OrItBo16GclCmdMj4sVw3k2VIn8XKuoAhG1mXzA/hmszBCPUOOeA9hJFWB4lwBwB2npWOdrbqy8AOaNzKuoCiTt2qjMto08q6gKLCSZ4ptKS2ZWldQEMGF+xORhDwltYFVEW4AwAbj0pH64utC0Frnob2+YZ6n6zraMHgPgtN5+bbbVhaF9CA34Ya7E5C/UM9SbG0LqAqwh0AdO9DaK07WheCVm2tC6hoa11AC7bWBZQV9g9juodYl95aF1DTc7j2cvAGfA1pZF1AVYQ7AOjWYLvZoJSXMEjJ4IS6x3Tt3WA/Cw0wlFoLt/YYslcNuNUox8q6gAruwsi1g0O4A4DuEOymY29dQE176wIatLcuoKpw7d2YgnYXIusCatqO7RrssB1/tq6jgqV1AVUQ7gCgG58JdpOyty6gpp11AQ3aWxdQ0966gIGJrAuoYUgjupa1VdoqOSQL6wKqINwBQPv+GPEPNjIMcPCO74Qz7UM7EMs09M9ChLuyhny93ca6gLaEa0i3xmWUFVkXUAXhDgDa9aphXm+A6sYy2mRiXUADBv9ZjCCcdmao10gFrxPo3bG1LqCku3DPxEEh3AFAu9aMijk5iXUBDYmtC2hAYl1AQ4Y42qCFhXUBNeysC2jbQEeAXVgXUBbhDgDa8zSBM7H40cG6gIYk1gU04GBdQEOO1gUMxNy6gBq21gV0ZG9dQEkL6wLKItwBQHs21gXARGJdQEOO1gU0ILEuoCGxdQEDEVkXUNHL2EbIzBNuSzKk63kj6wLKItwBQDueuVYGA3e0LgAoaW5dQEV76wI6FlsXUMLcuoCyCHcA0I6tdQFAHWHETGBI7q0LqCi2LqBjsXUBJQxumyLcAUA79tYFwExiXQC+OlgXgG4MfKTM2LqAjiXWBZQxtG2LcAcAzfuDETKni8++P6ZyHRMkSTPrAip6ndo+Y4CXLMysCyiDcAcAzYutCwCAiVlYF1BRYl2AkRfrAkpYWBdQBuEOAJoXWxcAABMzsy6gooN1AUYO1gWUMLMuoAzCHQA0jIEoAKBzM+sCKjpYF4Cb5tYFlEG4A4BmPVsXAAATtLAuAKUk1gWUMLcuoAzCHQA062hdAAAAPXe0LmCsCHcA0KzYugAAANCYmXUBZRDuAAAAMHRz6wIwWg/WBZRBuAMAAMDQ3VsXAPTBG+sCAAAAgImKnHMb6yIMRNYFjBXhDgAAALDxNjyARtAtEwAAAABGgHAHAAAAACNAuAMAAACAEeCau9t+ti4ApSXWBQAAAABdI9zd4L2PrWsAAAAAgFvolgkAAAAAI0C4AwAAAIARINwBAAAAwAgQ7gAAAABgBAh3AAAAADAChDsAAAAAGAHCHQAAAACMAOEOAAAAAEaAcAcAAAAAI0C4AwAAAIARINwBAAAAwAgQ7gAAAABgBAh3AAAAADAChDsAAAAAGAHCHQAAAACMAOEOAAAAAEaAcAcAAAAAI0C4AwAAAIARINwBAAAAwAgQ7gAAAABgBAh3AAAAADAChDsAAAAAGAHCHQAAAACMAOEOAAAAAEbgjXUBAAAAwES9SDpYF4HxINwBAAAANnbe+411ERgPumUCAAAAwAgQ7gAAAABgBAh3AAAAADAChDsAAAAM3Yt1AUAfEO4AAAAwdAfrAoA+INwBAAAAwAgQ7gAAAABgBAh3AAAAGLrEugCgDwh3AAAAGLqjdQEVza0LwLgQ7gAAADB0R+sCKppbF4BxIdwBAABg6BLrAipaWBeAcSHcAQAAYOiO1gVUdOecm1kXgfEg3AEAAGDQvPeJdQ01RNYFYDwIdwAAABiDF+sCKoqsC+iSc27mnPMDesTW71kZhDsAAACMwcG6gIqW1gV0LLIuoKTYuoAyCHcAAAAYg9i6gIrunXML6yI6tLIuoKTEuoAyCHcAAAAYg4N1ATWsrAvoQhg85p11HSUl1gWUQbgDAADAGCTWBdSwmsiomWvrAkp69d4frIsog3AHAACAwRv4iJl3Gl7wqWJlXUBJsXUBZRHuAAAAMBZP1gXUsB5z651zbiXp3rqOkmLrAsoi3AEAAGAsYusCahht610IrVvjMqqIrQsoi3AHAACAsYitC6jp00hHztwoDa9D8jrErr6EOwAAAIyC9z62rqEBuzF1z3TORZI+GpdRRWxdQBWEOwAAAIzJkK+7k6QHDbML4w9CSN0bl1HV3rqAKgh3AAAAGJO9dQENeO+c21gXUUcIdrGG1x3zJLYuoArCHQAAAMZkb11AQz6FESaHaqe0FXKInod2f7sTwh0AAABGIxyUv1jX0ZAvQ2vBc87NnHM7Se+sa6lhZ11AVYQ7AAAAjM3euoAGfQphqffOumK+t62ktr11AVUR7gAAADA2O+sCGvbeOZc45+bWheQJo2IeNNyumCeD7ZIpEe4AAAAwMuH+ZM/WdTTsQVLinFtbF3IudMPcSvpTwx085dzWuoA6CHcAAAAYo511AS24k/Src+4QWspMhQFfEg3zPnZ59tYF1EG4AwAAwBjtrAto0b2kP51zscWIms65lXPuIOlLqGUsHr33R+si6iDcAQAAYHTCQfqjdR0te6t0RM2jc27rnFu0tSLn3CKs46jxhbqTnXUBdb2xLgAAAABoyVbDH7mxiDulXSM/OudelY5YGSvtMpmUbY0Ko14uwiMKjzFcT3fNk/c+ti6iLsIdAAAARsl7nzjnnpS2cE3FndJ7zH29z5xzTpKezl4TX8wTnf3/QuMPcll21gU0gXAHAACAMdsoHclx6t7m/D+kF+/9zrqIJnDNHQAAAEYrdLV7uvU6TNrGuoCmEO4AAAAwdhvrAtBbo2m1kwh3AAAAGDla73DFxrqAJhHuAAAAMAUb6wLQO89jarWTCHcAAACYgNB6N/b73qGctXUBTSPcAQAAYCo2kl6ti0Av/DGG+9pdItwBAABgErz3B9E9E2nAX1kX0QbCHQAAACbDe7+V9GxdB0xtvPdH6yLaQLgDAADA1KysC4CZpxDwe8M5l/soi3AHAACASfHeJ5I+W9eBzvWiO2aZAFc26BHuAAAAMDne+424993UrMJ1l2aqtMadz3trfsIdAAAApmopRs+cikfv/d5q5beCmff+u8etZeUh3AEAAGCSwqAaS+My0L5nGd7TLi+MXQtzt4Je3jIJdwAAAJiscK+zf1rXgda8SlpajY6ZFcKKtM4VeX3Wsgl3AAAAmLQweuKjdR1oRWR1nV1esKuqSMAj3AEAAGDyvPcrMcDK2HwII6P2Qp1gd20Z5wGPcAcAAACkluIG52PxwXu/s1r5ZYtaXiirco+7ayGRcAcAAADo6wArkQh4Q/fY92BXZTnXlnl6LeEOAAAACAh4g/cYutiOQtn74hHuAAAAgDMEvMHqXbAr2mpX5j5315ZNuAMAAAAuEPAG53Pfgl3XnHOEOwAAACALAW8wPnjvN9ZFSOW7UdZ12XpHuAMAAAByeO+P3vuFuA9eH71K+ofl4CnXNHHrg7IIdwAAAMANocvfZ+s68NWL0huU760LaULR2yDcQrgDAAAACghd//6htMUIdp4kLfp0g/K2lG39I9wBAAAABYWWooW4Ds/KZ+99FK6HHI2sEFelWyfhDgAAACjBe38I1+HRTbM7L5L+3peBU4oo272yiWv0CHcAAABABSFo/Kw0eKA9v2ki3TDPFQmHl68h3AEAAAAVee9j7/1ctOK14VnSz9779VC6YdZtfbucv2zrH+EOAAAAqCm04v1N6WAfqOdV0j+99wvvfWxdTB1d3vfOe0+4AwAAAJoQrsWLlHbVZMCVan6TNPfeb60LsVK09S8rOBLuAAAAgAaFrpoLSR/E9XhFPUr625C6YOap27UyaxmXLpd5ej3hDgAAAGiB934Xrsf7ILprZnnVt1C38t4fjOtpTVbA895/fWTJe+5aWCTcAQAAAC0KIS9S2l3z0bicPniR9E+l3S9HGerKhrKi8kLiCeEOAAAA6EDorrmS9F9Kw82Urss7tdL97L2fe++3Q+9+eUvTAe9WsJOkN5WXDgAAAKC0EGq2krbOubmkpaSVpAermlryKimWtJe0H3uYy+K9/yGUnf4uc9uEIsFOklwTd0K/UkTU2sI7MvThVwEAADAMIehFSsNeJOnOrprKnpUGuth7v7ctpT+utdjl5bFK87QZ7gAAAABU45xbKA15i/DoY8vek6RE3wLd0bKYPmvqnnfX8hvhDgAAABiI0DNuHh5RmPy25dW+Kg1wh/BIJB2890nL6x2lqiGvSG4j3AEAAAAjEFr6ZuHP8/8v4xAeUhrgDrmvRG1Fgl6ZvPb/AXGWDehvF/weAAAAAElFTkSuQmCC';
   var EMPRESAS = [
     { nombre: 'GRUPO EMPRESARIAL FIRME', rfc: '' },
     { nombre: 'GRUPO FIRME DE MEXICO', rfc: 'GFM1211273F4' },
@@ -421,7 +455,46 @@
   $('f-fecha-sol').value = todayISO();
   function updSemana() { $('f-semana').value = $('f-fecha-sol').value ? 'Semana ' + weekNum($('f-fecha-sol').value) : ''; }
   $('f-fecha-sol').addEventListener('change', updSemana); updSemana();
-  $('f-clabe').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 18); });
+  // ---- datos bancarios ----
+  var BANK_CODES = { '002': 'BANAMEX', '006': 'BANCOMEXT', '009': 'BANOBRAS', '012': 'BBVA BANCOMER', '014': 'SANTANDER', '019': 'BANJERCITO', '021': 'HSBC', '030': 'BAJIO', '032': 'IXE', '036': 'INBURSA', '042': 'MIFEL', '044': 'SCOTIABANK', '058': 'BANREGIO', '059': 'INVEX', '060': 'BANSI', '062': 'AFIRME', '072': 'BANORTE', '106': 'BAMSA', '110': 'JP MORGAN', '112': 'BMONEX', '113': 'VE POR MAS', '124': 'CBDEUTSCHE', '127': 'AZTECA', '128': 'AUTOFIN', '129': 'BARCLAYS', '130': 'COMPARTAMOS', '131': 'BANCO FAMSA', '132': 'BMULTIVA', '133': 'CB ACTINVER', '136': 'INTERBANCO', '137': 'BANCOPPEL', '138': 'ABC CAPITAL', '140': 'CONSUBANCO', '143': 'CIBANCO', '145': 'BBASE', '147': 'BANKAOOL', '152': 'BANCREA', '156': 'SABADELL', '166': 'BANSEFI / BANCO DEL BIENESTAR', '167': 'HEY BANCO', '638': 'NU MEXICO', '646': 'STP', '706': 'ARCUS', '722': 'MERCADO PAGO W', '728': 'SPIN BY OXXO' };
+  function normB(x) { return String(x || '').toUpperCase().replace(/^[\d.\s]+/, '').replace(/\s+/g, ' ').trim(); }
+  function selectBank(name) {
+    var sel = $('f-banco'), n = normB(name);
+    var opt = Array.prototype.filter.call(sel.options, function (o) { return o.value && (normB(o.value) === n || normB(o.value).indexOf(n) === 0 || n.indexOf(normB(o.value)) === 0); })[0];
+    if (!opt) { opt = new Option(name, name); sel.add(opt); }
+    sel.value = opt.value; sel.classList.remove('invalid');
+  }
+  function clabeValid(c) {
+    if (!/^\d{18}$/.test(c)) return false;
+    var w = [3, 7, 1], sum = 0;
+    for (var i = 0; i < 17; i++) sum += (+c[i] * w[i % 3]) % 10;
+    return (10 - (sum % 10)) % 10 === +c[17];
+  }
+  function updClabe() {
+    var c = $('f-clabe').value, h = $('clabe-check');
+    h.className = 'hint'; h.textContent = '';
+    if (c.length >= 3 && BANK_CODES[c.slice(0, 3)]) selectBank(BANK_CODES[c.slice(0, 3)]);
+    if (c.length === 18) {
+      if (clabeValid(c)) { h.className = 'hint ok'; h.textContent = '✓ CLABE válida' + (BANK_CODES[c.slice(0, 3)] ? ' · ' + BANK_CODES[c.slice(0, 3)] : ''); $('f-clabe').classList.remove('invalid'); }
+      else { h.className = 'hint bad'; h.textContent = 'El dígito verificador no coincide: revisa la CLABE.'; }
+    } else if (c.length) { h.textContent = c.length + ' de 18 dígitos'; }
+  }
+  $('f-clabe').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 18); updClabe(); });
+  $('f-cuenta').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 20); });
+  var caratula = null;
+  function setCaratula(f) {
+    if (!f) return;
+    var isPdf = /pdf/i.test(f.type) || /\.pdf$/i.test(f.name), isImg = /^image\//.test(f.type);
+    if (!isPdf && !isImg) { flash('La carátula debe ser PDF o imagen.'); return; }
+    if (isPdf && f.size > MAX_PDF_BYTES) { flash('La carátula pesa más de 6 MB.'); return; }
+    caratula = { nombre: isPdf ? f.name : f.name.replace(/\.[^.]+$/, '') + '.jpg', tipo: 'caratula', mime: isPdf ? 'application/pdf' : 'image/jpeg' };
+    caratula.ready = (isPdf ? readAsDataURL(f) : compressImage(f)).then(function (u) { caratula.dataUrl = u; });
+    $('caratula-name').textContent = f.name; $('caratula-drop').classList.add('has-file'); $('caratula-drop').classList.remove('invalid');
+  }
+  $('in-caratula').addEventListener('change', function () { setCaratula(this.files[0]); this.value = ''; });
+  $('caratula-drop').addEventListener('dragover', function (e) { e.preventDefault(); this.classList.add('drag'); });
+  $('caratula-drop').addEventListener('dragleave', function () { this.classList.remove('drag'); });
+  $('caratula-drop').addEventListener('drop', function (e) { e.preventDefault(); this.classList.remove('drag'); setCaratula((e.dataTransfer.files || [])[0]); });
   $('f-monto-sol').addEventListener('input', recalcTotals);
   $('f-monto-sol').addEventListener('blur', function () { if (this.value.trim()) this.value = r2(num(this.value)).toFixed(2); });
   $('f-empresa').addEventListener('change', function () { items.forEach(function (it) { renderCfdi(it); }); });
@@ -445,7 +518,7 @@
   function addItem(prefill) {
     if (items.length >= MAX_ITEMS) return;
     seq++;
-    var it = { key: seq, xml: null, cfdi: null, files: [] };
+    var it = { key: seq, xml: null, cfdi: null, files: [], pdfInfo: null, fiscal: defaultFiscal(), fiscalManual: false };
     var row = el('div', { 'class': 'item-row', 'data-key': seq });
     row.innerHTML =
       '<div class="item-head"><div class="item-head-left"><span class="item-num"></span><span class="badge st"></span></div><button type="button" class="item-remove">Quitar</button></div>' +
@@ -456,6 +529,10 @@
       '<div class="file-chips"></div>' +
       '<div class="cfdi-strip" hidden></div>' +
       '<div class="g2">' +
+        '<div class="field"><label>Tipo de comprobante</label><div class="seg" role="group" aria-label="Fiscal o no fiscal"><button type="button" class="seg-f" aria-pressed="true">Fiscal (factura)</button><button type="button" class="seg-nf" aria-pressed="false">No fiscal (ticket / nota)</button></div></div>' +
+        '<div class="field"><label>Días de crédito <span class="opt">(0 = contado)</span></label><input type="text" class="f-dias money" inputmode="numeric" value="0" maxlength="3"><div class="venc"></div></div>' +
+      '</div>' +
+      '<div class="g2">' +
         '<div class="field"><label>Obra</label><select class="f-obra" required>' + optionList(CAT.obras, 'Selecciona la obra') + '</select></div>' +
         '<div class="field"><label>Descripción de insumos (partida)</label><select class="f-partida" required>' + optionList(CAT.partidas, 'Selecciona la partida') + '</select></div>' +
       '</div>' +
@@ -465,7 +542,7 @@
       '</div>' +
       '<div class="g3">' +
         '<div class="field"><label>Folio de factura / ticket</label><input type="text" class="f-folio"></div>' +
-        '<div class="field"><label>Fecha de factura</label><input type="date" class="f-fecha" required></div>' +
+        '<div class="field"><label>Fecha de emisión</label><input type="date" class="f-fecha" required></div>' +
         '<div class="field"><label>Frente <span class="opt">(opcional)</span></label><input type="text" class="f-frente"></div>' +
       '</div>' +
       '<div class="field"><label>Descripción</label><input type="text" class="f-desc" placeholder="Ej. Gasolina para camioneta de obra" required></div>' +
@@ -493,6 +570,10 @@
     });
     q('.iva-btn').addEventListener('click', function () { var s = num(q('.f-sub').value); q('.f-iva').value = r2(s * 0.16).toFixed(2); calcLine(it); recalcTotals(); });
     q('.f-rfc').addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^A-ZÑ&0-9]/g, ''); });
+    q('.seg-f').addEventListener('click', function () { it.fiscalManual = true; setFiscal(it, true); });
+    q('.seg-nf').addEventListener('click', function () { it.fiscalManual = true; setFiscal(it, false); });
+    q('.f-dias').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 3); updVenc(it); });
+    q('.f-fecha').addEventListener('change', function () { updVenc(it); renderCfdi(it); });
     q('.item-remove').addEventListener('click', function () {
       if (items.length === 1) { resetItem(it); return; }
       row.remove(); items = items.filter(function (x) { return x !== it; }); renumber(); recalcTotals(); checkDupUUIDs();
@@ -511,6 +592,7 @@
         if (others.length) addFiles(it, others);
       });
     });
+    setFiscal(it, it.fiscal); updVenc(it);
     calcLine(it); renumber(); renderFiles(it); renderCfdi(it);
     return it;
   }
@@ -547,7 +629,8 @@
     else { $('t-diff-l').textContent = 'Cuadrado'; box.dataset.tone = 'even'; }
     $('t-diff').textContent = money(Math.abs(diff));
     $('t-letra').textContent = letras(comp);
-    $('clabe-hint').textContent = diff < 0 ? 'Necesaria para depositarte ' + money(-diff) + '.' : 'Solo si hay un reembolso a tu favor.';
+    $('clabe-hint').textContent = diff < 0 ? 'Obligatorios: hay ' + money(-diff) + ' a tu favor. Captura titular, CLABE y sube tu carátula bancaria.' : 'Solo si hay un reembolso a tu favor.';
+    var bb = $('bank-badge'); bb.className = diff < 0 ? 'badge warn' : 'badge'; bb.textContent = diff < 0 ? 'Obligatorio' : 'Opcional';
     return { sol: sol, comp: comp, diff: diff };
   }
 
@@ -579,6 +662,7 @@
       var entry = { nombre: f.name, tipo: isPdf ? 'pdf' : 'img', mime: isPdf ? 'application/pdf' : 'image/jpeg', ready: null };
       entry.ready = (isPdf ? readAsDataURL(f) : compressImage(f)).then(function (url) { entry.dataUrl = url; if (!isPdf) entry.nombre = f.name.replace(/\.[^.]+$/, '') + '.jpg'; });
       it.files.push(entry);
+      if (isPdf) readInvoicePdf(it, f);
     });
     renderFiles(it);
   }
@@ -595,10 +679,88 @@
   }
   function updBadge(it) {
     var b = it.q('.badge.st');
-    if (it.cfdi && it.dup) { b.className = 'badge st bad'; b.textContent = 'UUID repetido'; }
-    else if (it.cfdi) { b.className = 'badge st ok'; b.textContent = 'CFDI leído'; }
-    else if (it.files.length) { b.className = 'badge st warn'; b.textContent = 'Sin XML'; }
+    if (it.dup) { b.className = 'badge st bad'; b.textContent = 'UUID repetido'; }
+    else if (!it.fiscal) { b.className = 'badge st'; b.textContent = it.files.length ? 'No fiscal' : 'No fiscal · sin archivo'; }
+    else if (it.cfdi) { b.className = 'badge st ok'; b.textContent = 'Fiscal · CFDI leído'; }
+    else if (it.pdfInfo && it.pdfInfo.uuid) { b.className = 'badge st warn'; b.textContent = 'Fiscal · falta XML'; }
+    else if (it.files.length) { b.className = 'badge st warn'; b.textContent = 'Fiscal · sin XML'; }
     else { b.className = 'badge st'; b.textContent = 'Sin archivos'; }
+  }
+
+  // ---- fiscal / no fiscal y días de crédito ----
+  function defaultFiscal() { var t = document.querySelector('input[name="tipo"]:checked'); return !(t && /NO FISCALES/.test(t.value)); }
+  function setFiscal(it, v) {
+    it.fiscal = !!v;
+    it.q('.seg-f').setAttribute('aria-pressed', v ? 'true' : 'false');
+    it.q('.seg-nf').setAttribute('aria-pressed', v ? 'false' : 'true');
+    updBadge(it);
+  }
+  function addDays(iso, n) { var p = iso.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2] + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function fmtDate(iso) { if (!iso) return ''; var p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+  function updVenc(it) {
+    var f = it.q('.f-fecha').value, n = parseInt(it.q('.f-dias').value || '0', 10) || 0;
+    var v = it.q('.venc');
+    if (!f) { v.textContent = ''; it.venc = ''; return; }
+    it.venc = addDays(f, n);
+    v.textContent = n ? 'Vence el ' + fmtDate(it.venc) + (it.cfdi && it.cfdi.metodoPago === 'PPD' ? ' · CFDI en PPD' : '') : 'Pago de contado' + (it.cfdi && it.cfdi.metodoPago === 'PPD' ? ' · ojo: el CFDI es PPD (pago diferido)' : '');
+  }
+  document.addEventListener('change', function (e) {
+    if (e.target.name !== 'tipo') return;
+    items.forEach(function (it) { if (!it.fiscalManual && !it.cfdi && !(it.pdfInfo && it.pdfInfo.uuid)) setFiscal(it, defaultFiscal()); });
+  });
+
+  // ---- lectura del PDF de la factura (fecha de emisión, folio fiscal) ----
+  var pdfjsReady = null;
+  function loadPdfJs() {
+    if (pdfjsReady) return pdfjsReady;
+    pdfjsReady = new Promise(function (res, rej) {
+      var sc = document.createElement('script');
+      sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      sc.onload = function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; res(window.pdfjsLib); };
+      sc.onerror = rej; document.head.appendChild(sc);
+    });
+    return pdfjsReady;
+  }
+  var MESES = { ene: 1, jan: 1, feb: 2, mar: 3, abr: 4, apr: 4, may: 5, jun: 6, jul: 7, ago: 8, aug: 8, sep: 9, set: 9, oct: 10, nov: 11, dic: 12, dec: 12 };
+  function isoOf(y, m, d) { y = +y; m = +m; d = +d; if (y < 100) y += 2000; if (!(y > 2000 && y < 2100 && m >= 1 && m <= 12 && d >= 1 && d <= 31)) return ''; return y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0'); }
+  function findDate(t) {
+    var m;
+    if ((m = t.match(/(20\d{2})[-\/](\d{1,2})[-\/](\d{1,2})/))) return isoOf(m[1], m[2], m[3]);
+    if ((m = t.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](20\d{2})/))) return isoOf(m[3], m[2], m[1]);
+    if ((m = t.match(/(\d{1,2})[-\/ ]?(?:de )?([a-záé]{3})[a-záé]*\.?[-\/ ]?(?:de(?:l)? )?(20\d{2})/i)) && MESES[m[2].toLowerCase().slice(0, 3)]) return isoOf(m[3], MESES[m[2].toLowerCase().slice(0, 3)], m[1]);
+    return '';
+  }
+  function parseInvoiceText(text) {
+    var t = text.replace(/\s+/g, ' ');
+    var info = { fecha: '', uuid: '', total: 0 };
+    var u = t.match(/[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}/i);
+    if (u) info.uuid = u[0].toUpperCase();
+    var re = /(fecha(?: y hora)? de emisi[oó]n|fecha emisi[oó]n|emitid[oa] el|fecha de expedici[oó]n|fecha:)/ig, mm;
+    while ((mm = re.exec(t)) && !info.fecha) info.fecha = findDate(t.slice(mm.index + mm[0].length, mm.index + mm[0].length + 60));
+    if (!info.fecha) info.fecha = findDate(t);
+    var tot = t.match(/total\s*(?:a pagar|mxn|neto)?\s*:?\s*\$?\s*([\d,]+\.\d{2})(?![\s\S]*total\s*(?:a pagar|mxn|neto)?\s*:?\s*\$?\s*[\d,]+\.\d{2})/i);
+    if (tot) info.total = num(tot[1]);
+    return info;
+  }
+  function readInvoicePdf(it, file) {
+    var buf;
+    file.arrayBuffer().then(function (b) { buf = b; return loadPdfJs(); }).then(function (lib) {
+      return lib.getDocument({ data: buf }).promise;
+    }).then(function (doc) {
+      var pages = []; for (var i = 1; i <= Math.min(doc.numPages, 2); i++) pages.push(doc.getPage(i).then(function (p) { return p.getTextContent(); }).then(function (tc) { return tc.items.map(function (x) { return x.str; }).join(' '); }));
+      return Promise.all(pages);
+    }).then(function (texts) {
+      var info = parseInvoiceText(texts.join(' '));
+      if (!info.fecha && !info.uuid) return;
+      it.pdfInfo = info;
+      var q = it.q;
+      if (!it.cfdi) {
+        if (info.fecha) { q('.f-fecha').value = info.fecha; q('.f-fecha').classList.remove('invalid'); }
+        if (info.uuid && !it.fiscalManual) setFiscal(it, true);
+        if (info.total && !num(q('.f-pu').value)) { q('.f-pu').value = info.total.toFixed(2); calcLine(it); recalcTotals(); }
+      }
+      updVenc(it); checkDupUUIDs(); renderCfdi(it);
+    }).catch(function () {});
   }
 
   // ---- lectura de CFDI (XML 3.3 / 4.0) ----
@@ -658,15 +820,26 @@
       q('.f-otros').value = c.otros ? c.otros.toFixed(2) : '';
       q('.xml-name').textContent = file.name;
       q('.drop[data-kind="xml"]').classList.add('has-file');
-      calcLine(it); recalcTotals(); checkDupUUIDs(); renderCfdi(it);
+      setFiscal(it, true);
+      calcLine(it); recalcTotals(); updVenc(it); checkDupUUIDs(); renderCfdi(it);
       ['.f-proveedor', '.f-fecha', '.f-desc', '.f-pu', '.drop[data-kind="pdf"]'].forEach(function (s) { q(s).classList.remove('invalid'); });
     };
     fr.readAsText(file);
   }
   function renderCfdi(it) {
     var s = it.q('.cfdi-strip'); var c = it.cfdi;
-    if (!c) { s.hidden = true; updBadge(it); return; }
+    var fe = it.q('.f-fecha').value;
+    var future = fe && fe > todayISO();
+    if (!c) {
+      var p = it.pdfInfo;
+      if (!p && !future && !it.dup) { s.hidden = true; updBadge(it); return; }
+      s.innerHTML = (p ? '<div><span class="pdf-read">✓ Leído del PDF:</span> ' + (p.fecha ? 'fecha de emisión <b>' + fmtDate(p.fecha) + '</b>' : 'sin fecha') + (p.uuid ? ' · folio fiscal <span class="mono">' + esc(p.uuid) + '</span>' : '') + (p.total ? ' · total ' + money(p.total) : '') + '</div>' + (p.uuid ? '<div class="k">Sube también el XML para leer los importes exactos.</div>' : '') : '') +
+        (it.dup ? '<div class="w">⚠ Este folio fiscal ya está en otro comprobante de esta comprobación.</div>' : '') +
+        (future ? '<div class="w">⚠ La fecha de emisión es posterior a hoy.</div>' : '');
+      s.hidden = false; updBadge(it); return;
+    }
     var warns = [];
+    if (future) warns.push('La fecha de emisión es posterior a hoy.');
     var emp = EMPRESAS.filter(function (e) { return e.nombre === $('f-empresa').value; })[0];
     if (emp && emp.rfc && c.receptorRfc && c.receptorRfc.toUpperCase() !== emp.rfc) warns.push('La factura está a nombre de ' + esc(c.receptorRfc) + ', no de ' + esc(emp.nombre) + ' (' + emp.rfc + ').');
     if (c.tipo && c.tipo !== 'I') warns.push('El CFDI no es de ingreso (tipo ' + esc(c.tipo) + ').');
@@ -681,9 +854,10 @@
     s.hidden = false;
     updBadge(it);
   }
+  function uuidOf(it) { return (it.cfdi && it.cfdi.uuid) || (it.pdfInfo && it.pdfInfo.uuid) || ''; }
   function checkDupUUIDs() {
     var seen = {};
-    items.forEach(function (it) { it.dup = false; if (it.cfdi && it.cfdi.uuid) { (seen[it.cfdi.uuid] = seen[it.cfdi.uuid] || []).push(it); } });
+    items.forEach(function (it) { it.dup = false; var u = uuidOf(it); if (u) { (seen[u] = seen[u] || []).push(it); } });
     Object.keys(seen).forEach(function (u) { if (seen[u].length > 1) seen[u].forEach(function (it) { it.dup = true; }); });
     items.forEach(renderCfdi);
   }
@@ -715,7 +889,14 @@
     $('tipo-group').classList.toggle('invalid-group', !tipo);
     if (!tipo) { ok = false; first = first || $('tipo-group'); }
     var clabe = $('f-clabe').value;
-    if (clabe && clabe.length !== 18) { chk($('f-clabe'), true); msgs.push('La CLABE debe tener 18 dígitos.'); }
+    var reembolso = recalcTotals().diff < 0;
+    if (clabe && !clabeValid(clabe)) { chk($('f-clabe'), true); msgs.push('La CLABE no es válida (18 dígitos y dígito verificador).'); }
+    if (reembolso) {
+      chk($('f-titular'), !$('f-titular').value.trim());
+      chk($('f-clabe'), !clabeValid(clabe));
+      chk($('f-banco'), !$('f-banco').value);
+      if (!caratula) { $('caratula-drop').classList.add('invalid'); ok = false; first = first || $('bank-box'); msgs.push('Sube tu carátula bancaria para el reembolso.'); }
+    }
     var nItems = 0;
     items.forEach(function (it) {
       var q = it.q;
@@ -758,6 +939,9 @@
       metodoPago: $('f-metodo').value,
       banco: $('f-banco').value,
       clabe: $('f-clabe').value,
+      titularCuenta: $('f-titular').value.trim(),
+      cuentaBancaria: $('f-cuenta').value,
+      archivosGenerales: caratula && caratula.dataUrl ? [{ nombre: caratula.nombre, tipo: 'caratula', mime: caratula.mime, b64: caratula.dataUrl.split(',')[1] || '' }] : [],
       observaciones: $('f-obs').value.trim(),
       montoSolicitado: t.sol, montoComprobado: t.comp, diferencia: t.diff,
       importeLetra: letras(t.comp),
@@ -772,7 +956,11 @@
           cantidad: r2(num(q('.f-cant').value)), precioUnitario: r2(num(q('.f-pu').value)), subtotal: r2(num(q('.f-sub').value)),
           iva: r2(num(q('.f-iva').value)), retIsr: r2(num(q('.f-risr').value)), retIva: r2(num(q('.f-riva').value)), otros: r2(num(q('.f-otros').value)),
           total: r2(it.total || 0),
-          uuid: c.uuid || '', receptorRfc: c.receptorRfc || '', cfdiTotal: c.total || 0, metodoPagoCfdi: c.metodoPago || '', formaPagoCfdi: c.formaPago || '',
+          fiscal: it.fiscal ? 'FISCAL' : 'NO FISCAL',
+          diasCredito: parseInt(q('.f-dias').value || '0', 10) || 0,
+          fechaVencimiento: it.venc || '',
+          fechaPdf: (it.pdfInfo && it.pdfInfo.fecha) || '',
+          uuid: c.uuid || (it.pdfInfo && it.pdfInfo.uuid) || '', receptorRfc: c.receptorRfc || '', cfdiTotal: c.total || 0, metodoPagoCfdi: c.metodoPago || '', formaPagoCfdi: c.formaPago || '',
           archivos: [it.xml].concat(it.files).filter(Boolean).map(function (f) { return { nombre: f.nombre, tipo: f.tipo, mime: f.mime, b64: (f.dataUrl || '').split(',')[1] || '' }; })
         };
       })
@@ -786,7 +974,7 @@
     if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('http') !== 0) { flash('El formulario aún no está conectado al servidor de Administración.'); return; }
     submitBtn.disabled = true; overlay.hidden = false; $('overlay-text').textContent = 'Preparando archivos…';
     try {
-      await Promise.all(items.reduce(function (a, it) { return a.concat(it.files.map(function (f) { return f.ready; })); }, []));
+      await Promise.all(items.reduce(function (a, it) { return a.concat(it.files.map(function (f) { return f.ready; })); }, caratula ? [caratula.ready] : []));
       var data = collect();
       var body = JSON.stringify(data);
       if (body.length > MAX_TOTAL_BYTES) throw new Error('Los archivos suman más de 30 MB. Reduce el tamaño de los PDF o divide la comprobación en dos.');
@@ -801,6 +989,7 @@
         throw new Error((out && out.message) || 'El servidor no pudo registrar la comprobación.');
       }
       showConfirm(out.id, data);
+      makeAndUploadPdf(out, data);
     } catch (err) {
       flash((err && err.message ? err.message : 'No se pudo enviar.') + ' Tus datos siguen aquí: intenta de nuevo.');
     } finally {
@@ -816,16 +1005,98 @@
       [d.diferencia > 0 ? 'Por comprobar / devolver' : d.diferencia < 0 ? 'A reembolsar' : 'Diferencia', money(Math.abs(d.diferencia))]
     ];
     $('confirm-summary').innerHTML = rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('');
-    $('confirm-table').innerHTML = '<thead><tr><th>#</th><th>Proveedor</th><th>Folio</th><th>Fecha</th><th class="r">Total</th></tr></thead><tbody>' +
-      d.items.map(function (i) { return '<tr><td>' + i.linea + '</td><td class="wrap">' + esc(i.proveedor) + '</td><td>' + esc(i.folioFactura || '—') + '</td><td>' + esc(i.fechaFactura) + '</td><td class="r">' + money(i.total) + '</td></tr>'; }).join('') + '</tbody>';
+    $('confirm-table').innerHTML = '<thead><tr><th>#</th><th>Proveedor</th><th>Tipo</th><th>Folio</th><th>Emisión</th><th>Vence</th><th class="r">Total</th></tr></thead><tbody>' +
+      d.items.map(function (i) { return '<tr><td>' + i.linea + '</td><td class="wrap">' + esc(i.proveedor) + '</td><td>' + (i.fiscal === 'FISCAL' ? 'Fiscal' : 'No fiscal') + '</td><td>' + esc(i.folioFactura || '—') + '</td><td>' + esc(fmtDate(i.fechaFactura)) + '</td><td>' + esc(i.diasCredito ? fmtDate(i.fechaVencimiento) : 'Contado') + '</td><td class="r">' + money(i.total) + '</td></tr>'; }).join('') + '</tbody>';
     form.hidden = true; $('confirm-view').hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+  // ====== formato FO-GF-01 en PDF ======
+  var lastPdf = null;
+  function loadScript(src) { return new Promise(function (res, rej) { var sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); }
+  var jspdfReady = null;
+  function loadJsPdf() {
+    if (!jspdfReady) jspdfReady = loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js').then(function () { return loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'); });
+    return jspdfReady;
+  }
+  var EMP_FISCAL = { 'GRUPO FIRME DE MEXICO': { rfc: 'GFM1211273F4', domicilio: 'DURANGO 2145 L1, FRACC. LA PERLA, LA PAZ, B.C.S., C.P. 23040', regimen: '601 - General de Ley Personas Morales' } };
+  function buildPdf(folio, d) {
+    var doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' });
+    var W = doc.internal.pageSize.getWidth(), M = 10, NAVY = [35, 64, 103];
+    doc.setFillColor(255, 205, 0); doc.rect(0, 0, W * 0.55, 2.2, 'F'); doc.setFillColor(249, 178, 51); doc.rect(W * 0.55, 0, W * 0.3, 2.2, 'F'); doc.setFillColor(197, 19, 21); doc.rect(W * 0.85, 0, W * 0.15, 2.2, 'F');
+    try { doc.addImage(LOGO_DARK, 'PNG', M, 6, 44, 12.4); } catch (e) {}
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(29, 29, 27);
+    doc.text(d.empresa || '', W / 2, 11, { align: 'center' });
+    doc.setFontSize(10.5); doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
+    doc.text('SOLICITUD DE RECURSO / COMPROBACIÓN DE GASTOS', W / 2, 16.5, { align: 'center' });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(29, 29, 27);
+    doc.text('CÓDIGO: FO-GF-01', W - M, 8.5, { align: 'right' });
+    doc.setFont('helvetica', 'bold'); doc.text('FOLIO: ' + folio, W - M, 12.5, { align: 'right' });
+    doc.setFont('helvetica', 'normal'); doc.text('FECHA COMPROBACIÓN: ' + fmtDate(todayISO()), W - M, 16.5, { align: 'right' });
+    var y = 21.5;
+    var ef = EMP_FISCAL[d.empresa];
+    if (ef) { doc.setFontSize(7.2); doc.text('RFC: ' + ef.rfc + '    DOMICILIO FISCAL: ' + ef.domicilio + '    RÉGIMEN FISCAL: ' + ef.regimen, M, y); y += 2.5; }
+    var diffL = d.diferencia > 0 ? 'POR COMPROBAR / DEVOLVER' : d.diferencia < 0 ? 'A REEMBOLSAR AL COLABORADOR' : 'DIFERENCIA';
+    var g = [
+      ['CENTRO DE COSTOS', d.centroCostos, 'FECHA SOLICITUD', fmtDate(d.fechaSolicitud) + '  ·  SEMANA ' + d.semana, 'FOLIO SOLICITUD', d.folioSolicitud || '—'],
+      ['SOLICITÓ', d.solicitante, 'NO. PROVEEDOR', d.noProveedor || '—', 'MONTO SOLICITADO/PAGADO', money(d.montoSolicitado)],
+      ['AUTORIZÓ', d.autoriza, 'TIPO DE COMPROBACIÓN', d.tipoComprobacion, 'MONTO COMPROBADO', money(d.montoComprobado)],
+      ['MÉTODO DE PAGO', d.metodoPago, 'CONTACTO', d.contacto, diffL, money(Math.abs(d.diferencia))],
+      ['TITULAR DE LA CUENTA', d.titularCuenta || '—', 'BANCO / CLABE', (d.banco || '—') + (d.clabe ? '  ·  ' + d.clabe : ''), 'CARÁTULA BANCARIA', (d.archivosGenerales || []).length ? 'ADJUNTA' : 'NO'],
+      ['OBSERVACIONES', { content: d.observaciones || '—', colSpan: 5 }]
+    ];
+    var lab = { fontStyle: 'bold', fillColor: [227, 234, 243], textColor: NAVY };
+    doc.autoTable({ startY: y + 1, body: g.map(function (r) { return r.map(function (c, i) { return typeof c === 'object' ? c : (i % 2 === 0 ? { content: c, styles: lab } : String(c == null ? '' : c)); }); }), theme: 'grid', margin: { left: M, right: M },
+      styles: { fontSize: 7.2, cellPadding: 1.2, lineColor: [180, 190, 205], lineWidth: 0.15, textColor: [29, 29, 27] },
+      columnStyles: { 0: { cellWidth: 30 }, 2: { cellWidth: 30 }, 4: { cellWidth: 40 } } });
+    var head = [['#', 'OBRA', 'PROVEEDOR', 'FOLIO', 'F. EMISIÓN', 'TIPO', 'DÍAS CR.', 'VENCE', 'DESCRIPCIÓN DE INSUMOS', 'DESCRIPCIÓN', 'CANT.', 'P. UNIT.', 'SUBTOTAL', 'IVA', 'RET. ISR', 'RET. IVA', 'OTROS', 'TOTAL']];
+    var body = d.items.map(function (i) { return [i.linea, i.obra, i.proveedor + (i.rfc ? '\n' + i.rfc : ''), i.folioFactura || '—', fmtDate(i.fechaFactura), i.fiscal === 'FISCAL' ? 'Fiscal' : 'No fiscal', i.diasCredito || 0, fmtDate(i.fechaVencimiento), i.partida, i.descripcion, i.cantidad, money(i.precioUnitario), money(i.subtotal), money(i.iva), money(i.retIsr), money(i.retIva), money(i.otros), money(i.total)]; });
+    var sum = function (k) { return money(d.items.reduce(function (a, i) { return a + num(i[k]); }, 0)); };
+    doc.autoTable({ startY: doc.lastAutoTable.finalY + 3, head: head, body: body,
+      foot: [[{ content: 'TOTALES', colSpan: 12, styles: { halign: 'right' } }, sum('subtotal'), sum('iva'), sum('retIsr'), sum('retIva'), sum('otros'), money(d.montoComprobado)]],
+      theme: 'grid', margin: { left: M, right: M },
+      styles: { fontSize: 6.3, cellPadding: 1, lineColor: [180, 190, 205], lineWidth: 0.15, textColor: [29, 29, 27], valign: 'top' },
+      headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold', fontSize: 6.2, halign: 'center' },
+      footStyles: { fillColor: [227, 234, 243], textColor: NAVY, fontStyle: 'bold', halign: 'right' },
+      columnStyles: { 0: { cellWidth: 5 }, 1: { cellWidth: 26 }, 2: { cellWidth: 26 }, 6: { halign: 'center', cellWidth: 9 }, 10: { halign: 'right', cellWidth: 8 }, 11: { halign: 'right' }, 12: { halign: 'right' }, 13: { halign: 'right' }, 14: { halign: 'right' }, 15: { halign: 'right' }, 16: { halign: 'right' }, 17: { halign: 'right', fontStyle: 'bold' } } });
+    var fy = doc.lastAutoTable.finalY + 5;
+    var H = doc.internal.pageSize.getHeight();
+    if (fy > H - 32) { doc.addPage(); fy = 20; }
+    doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.text('IMPORTE CON LETRA:', M, fy);
+    doc.setFont('helvetica', 'normal'); doc.text(d.importeLetra || letras(d.montoComprobado), M + 32, fy);
+    doc.setFont('helvetica', 'bold'); doc.text('TOTAL: ' + money(d.montoComprobado), W - M, fy, { align: 'right' });
+    var sy = fy + 20, cw = 70;
+    [[d.solicitante, 'SOLICITANTE'], [d.autoriza, 'JEFE INMEDIATO']].forEach(function (p, k) {
+      var x = M + 10 + k * (cw + 25);
+      doc.setDrawColor(29, 29, 27); doc.setLineWidth(0.3); doc.line(x, sy, x + cw, sy);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.text(p[0] || '', x + cw / 2, sy + 4, { align: 'center' });
+      doc.setFont('helvetica', 'bold'); doc.text(p[1], x + cw / 2, sy + 8, { align: 'center' });
+    });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(91, 102, 118);
+    doc.text('FO-GF-01 · REV.00 ENE/26', W - M, sy + 8, { align: 'right' });
+    var pages = doc.internal.getNumberOfPages();
+    for (var pg = 1; pg <= pages; pg++) { doc.setPage(pg); doc.setFontSize(6.5); doc.setTextColor(140); doc.text('Página ' + pg + ' de ' + pages + '  ·  Generado por comprobaciones.gfmexico.mx', W / 2, H - 5, { align: 'center' }); }
+    return doc;
+  }
+  function makeAndUploadPdf(out, d) {
+    var st = $('pdf-status'); $('dl-pdf').disabled = true; st.textContent = 'Generando PDF…';
+    loadJsPdf().then(function () {
+      var doc = buildPdf(out.id, d);
+      lastPdf = { doc: doc, name: 'FO-GF-01_' + out.id + '.pdf' };
+      $('dl-pdf').disabled = false; st.textContent = 'Guardando copia en la carpeta de Administración…';
+      var b64 = doc.output('datauristring').split(',')[1];
+      return fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ accion: 'adjuntarPdf', folio: out.id, token: out.token || '', nombre: lastPdf.name, b64: b64 }) })
+        .then(function (r) { return r.json(); })
+        .then(function (r) { st.textContent = r && r.ok ? '✓ Copia guardada con tu comprobación.' : 'Descárgalo y envíalo a Administración si te lo piden.'; });
+    }).catch(function () { st.textContent = $('dl-pdf').disabled ? 'No se pudo generar el PDF en este navegador.' : 'Descárgalo y envíalo a Administración si te lo piden.'; });
+  }
+  $('dl-pdf').addEventListener('click', function () { if (lastPdf) lastPdf.doc.save(lastPdf.name); });
+
   $('reset-link').addEventListener('click', function (e) {
     e.preventDefault();
     var keep = { solicitante: $('f-solicitante').value, autoriza: $('f-autoriza').value, contacto: $('f-contacto').value, empresa: $('f-empresa').value, cc: $('f-cc').value };
     form.reset(); items.forEach(function (it) { it.row.remove(); }); items = [];
     $('f-solicitante').value = keep.solicitante; $('f-autoriza').value = keep.autoriza; $('f-contacto').value = keep.contacto; $('f-empresa').value = keep.empresa; $('f-cc').value = keep.cc;
+    caratula = null; lastPdf = null; $('caratula-name').textContent = 'Toca o arrastra el archivo'; $('caratula-drop').classList.remove('has-file'); updClabe();
     $('f-fecha-sol').value = todayISO(); updSemana(); addItem(); recalcTotals();
     $('confirm-view').hidden = true; form.hidden = false; window.scrollTo({ top: 0 });
   });
