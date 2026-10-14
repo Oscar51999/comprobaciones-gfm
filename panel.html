@@ -202,7 +202,7 @@
   <div class="gate-card">
     <div class="stripe"></div>
     <h2>Panel de Comprobaciones</h2>
-    <p>Acceso restringido a Administración. Ingresa la contraseña para continuar.</p>
+    <p>Acceso restringido a Finanzas. Ingresa la contraseña para continuar.</p>
     <form id="gate-form">
       <input type="password" id="gate-password" placeholder="Contraseña" autocomplete="current-password" required>
       <button type="submit" class="primary" id="gate-btn">Entrar</button>
@@ -263,7 +263,7 @@
         <select class="estado" id="d-estado"></select>
       </div>
       <div>
-        <label for="d-coment">Comentarios de Administración <span style="font-weight:400;color:var(--ink-soft)">(se envían al colaborador al cambiar el estado)</span></label>
+        <label for="d-coment">Comentarios de Finanzas <span style="font-weight:400;color:var(--ink-soft)">(se envían al colaborador al cambiar el estado)</span></label>
         <textarea id="d-coment" placeholder="Ej. Falta el XML del comprobante 3"></textarea>
         <div style="margin-top:8px"><button class="secondary" id="d-save">Guardar comentario</button><span class="saved" id="d-saved" hidden>Guardado</span></div>
       </div>
@@ -469,7 +469,7 @@
       ['Comprueba', r.solicitante], ['Jefe que autoriza', r.autoriza], ['Contacto', r.contacto], ['No. proveedor', r.noProveedor || '—'],
       ['Empresa', r.empresa], ['Centro de costos', r.centroCostos], ['Fecha de solicitud', fdate(ymd(r.fechaSolicitud) + 'T12:00:00') + (r.semana ? ' · Sem. ' + r.semana : '')], ['Folio de solicitud', r.folioSolicitud || '—'],
       ['Método de pago', r.metodoPago], ['Titular de la cuenta', r.titularCuenta || '—'], ['Banco', r.banco || '—'], ['CLABE', r.clabe || '—'],
-      ['No. de cuenta', r.cuentaBancaria || '—'], ['Carátula bancaria', r.caratulaUrl ? 'Adjunta' : 'No'], ['Observaciones', r.observaciones || '—'], ['Formato PDF', r.pdfUrl ? 'Generado' : '—'],
+      ['No. de cuenta', r.cuentaBancaria || '—'], ['Carátula bancaria', r.caratulaUrl ? 'Adjunta' : 'No'], ['Solicitud / motivo', r.observaciones || '—'], ['Formato PDF', r.pdfUrl ? 'Generado' : '—'],
       ['Monto solicitado / pagado', money(r.montoSolicitado)], ['Monto comprobado', money(r.montoComprobado)], [diffInfo(r.diferencia).l, money(Math.abs(num(r.diferencia)))], ['Comprobantes', (r.items || []).length]
     ];
     $('d-kv').innerHTML = kv.map(function (p) { return '<div><dt>' + esc(p[0]) + '</dt><dd' + (p[0] === 'CLABE' ? ' class="mono"' : '') + '>' + esc(p[1]) + '</dd></div>'; }).join('');
@@ -535,7 +535,7 @@
         cell('SOLICITÓ:', r.solicitante) + cell('NO. PROVEEDOR:', r.noProveedor) + cell('MONTO SOLICITADO/PAGADO:', money(r.montoSolicitado)) +
         cell('AUTORIZÓ:', r.autoriza) + cell('TIPO DE COMPROBACIÓN:', r.tipoComprobacion) + cell('MONTO COMPROBADO:', money(r.montoComprobado)) +
         cell('MÉTODO DE PAGO:', r.metodoPago) + cell('BANCO / CLABE:', (r.banco || 'N/A') + ' · ' + (r.clabe || '')) + cell('MONTO POR COMPROBAR / REEMBOLSAR:', money(r.diferencia)) +
-        cell('OBSERVACIONES:', r.observaciones) + cell('ESTADO:', ESTADO_LABEL[r.estado] || r.estado) + cell('COMPROBANTES:', its.length) +
+        cell('SOLICITUD / MOTIVO:', r.observaciones) + cell('ESTADO:', ESTADO_LABEL[r.estado] || r.estado) + cell('COMPROBANTES:', its.length) +
       '</div>' +
       '<table class="pf-table"><thead><tr><th>OBRA</th><th>PROVEEDOR</th><th>FOLIO FACTURA</th><th>F. EMISIÓN</th><th>TIPO</th><th>DÍAS CR.</th><th>FRENTE</th><th>DESCRIPCIÓN DE INSUMOS</th><th>DESCRIPCIÓN</th><th>CANT.</th><th>P. UNITARIO</th><th>SUBTOTAL</th><th>IVA</th><th>RET. ISR</th><th>RET. IVA</th><th>OTROS</th><th>TOTAL</th></tr></thead><tbody>' +
       its.map(function (i) { return '<tr><td>' + esc(i.obra) + '</td><td>' + esc(i.proveedor) + '</td><td>' + esc(i.folioFactura) + '</td><td>' + esc(ymd(i.fechaFactura)) + '</td><td>' + (i.fiscal === 'NO FISCAL' ? 'No fiscal' : 'Fiscal') + '</td><td>' + esc(i.diasCredito || 0) + '</td><td>' + esc(i.frente) + '</td><td>' + esc(i.partida) + '</td><td>' + esc(i.descripcion) + '</td><td class="r">' + esc(i.cantidad) + '</td><td class="r">' + money(i.precioUnitario) + '</td><td class="r">' + money(i.subtotal) + '</td><td class="r">' + money(i.iva) + '</td><td class="r">' + money(i.retIsr) + '</td><td class="r">' + money(i.retIva) + '</td><td class="r">' + money(i.otros) + '</td><td class="r">' + money(i.total) + '</td></tr>'; }).join('') +
