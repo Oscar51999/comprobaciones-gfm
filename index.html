@@ -77,7 +77,7 @@
 
   label { display: block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
   label .opt { font-weight: 400; color: var(--ink-soft); }
-  input[type="text"], input[type="number"], input[type="email"], input[type="date"], textarea, select {
+  input[type="text"], input[type="number"], input[type="email"], input[type="date"], input[type="search"], textarea, select {
     width: 100%; font: inherit; font-size: 14px; color: var(--ink); background: var(--paper);
     border: 1px solid var(--border); border-radius: 8px; padding: 11px 12px; transition: border-color .15s, box-shadow .15s; min-width: 0;
   }
@@ -101,6 +101,23 @@
   .pill-grid.invalid-group .pill { border-color: var(--critical); }
 
   .money-row { display: grid; grid-template-columns: 1fr 64px; gap: 8px; align-items: center; }
+  .start-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
+  @media (max-width: 560px) { .start-btns { grid-template-columns: 1fr; } }
+  .start-btn { font: inherit; text-align: left; cursor: pointer; border: 1.5px solid var(--border); background: var(--surface); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; color: var(--ink); }
+  .start-btn b { font-size: 15.5px; color: #234067; }
+  .start-btn span { font-size: 13px; color: var(--ink-soft); }
+  .start-btn:hover, .start-btn:focus-visible { border-color: #234067; box-shadow: 0 0 0 3px rgba(35,64,103,.12); outline: none; }
+  .start-btn.sol { border-left: 5px solid #F9B233; } .start-btn.comp { border-left: 5px solid #234067; }
+  .mode-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #EEF2F8; border-radius: 8px; padding: 8px 12px; margin: -6px 0 16px; font-size: 13px; font-weight: 600; color: #234067; }
+  .mode-bar a { font-weight: 600; color: #234067; }
+  .folio-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .mini { font: inherit; font-weight: 700; font-size: 13px; border: 1px solid #234067; color: #234067; background: #fff; border-radius: 8px; padding: 0 14px; cursor: pointer; }
+  .mini:hover { background: #EEF2F8; }
+  .hint.ok { color: #15803D; } .hint.bad { color: #B91C1C; }
+  input[readonly].ro { background: var(--surface-2, #F3F4F6); color: var(--ink-soft); cursor: not-allowed; }
+  .presu { float: right; font-weight: 600; font-size: 11.5px; color: #234067; text-decoration: underline; text-underline-offset: 2px; }
+  .f-ins-q { margin-bottom: 6px; }
+  .presu-warn { font-size: 12px; font-weight: 600; color: #B91C1C; margin-top: 4px; }
   .money-row .cur { font-size: 13px; color: var(--ink-soft); }
   .bank-box { border: 1px solid var(--border); border-left: 4px solid #234067; border-radius: 10px; padding: 16px 16px 14px; margin-bottom: 18px; background: var(--paper); }
   .bank-box input, .bank-box select { background: var(--surface); }
@@ -230,14 +247,24 @@
 </div>
 
 <main>
-  <form id="comp-form" novalidate>
+  <div class="card" id="start-card">
+    <p class="section-title">¿Necesitas solicitar recurso?</p>
+    <p class="section-hint">Si vas a pedir un anticipo a Finanzas (viáticos, compras de obra) <b>antes de gastar</b>, llena primero la solicitud de recurso: te daremos un folio para usarlo después en tu comprobación.</p>
+    <div class="start-btns">
+      <button type="button" class="start-btn sol" data-m="sol"><b>Sí, solicitar recurso</b><span>Pide un anticipo a Finanzas y obtén tu folio de solicitud</span></button>
+      <button type="button" class="start-btn comp" data-m="comp"><b>No, comprobar gastos</b><span>Ya gastaste: sube tus facturas o tickets</span></button>
+    </div>
+  </div>
+
+  <form id="comp-form" novalidate hidden>
   <div class="card" id="card-datos">
-    <p class="section-title"><span class="section-num">1</span>Datos de la comprobación</p>
-    <p class="section-hint">Quién comprueba, quién autoriza y a qué centro de costos se aplica.</p>
+    <div class="mode-bar"><span id="mode-label">Comprobación de gastos</span><a href="#" id="mode-change">Cambiar</a></div>
+    <p class="section-title"><span class="section-num">1</span><span id="datos-title">Datos de la comprobación</span></p>
+    <p class="section-hint" id="datos-hint">Quién comprueba, quién autoriza y a qué centro de costos se aplica.</p>
     <fieldset>
       <div class="row2">
         <div class="field">
-          <label for="f-solicitante">Nombre de quien comprueba</label>
+          <label for="f-solicitante" id="lbl-solicitante">Nombre de quien comprueba</label>
           <input type="text" id="f-solicitante" autocomplete="name" required>
         </div>
         <div class="field">
@@ -268,15 +295,16 @@
       <div class="row3">
         <div class="field">
           <label for="f-fecha-sol">Fecha de solicitud</label>
-          <input type="date" id="f-fecha-sol" required>
+          <input type="date" id="f-fecha-sol" class="ro" readonly tabindex="-1" required>
         </div>
         <div class="field">
           <label for="f-semana">Semana</label>
           <input type="text" id="f-semana" readonly tabindex="-1" class="mono">
         </div>
-        <div class="field">
-          <label for="f-folio-sol">Folio de solicitud</label>
-          <input type="text" id="f-folio-sol" placeholder="Ej. 01" required>
+        <div class="field" id="fld-folio-sol">
+          <label for="f-folio-sol">Folio de solicitud de recurso <span class="opt">(si la hiciste)</span></label>
+          <div class="folio-row"><input type="text" id="f-folio-sol" class="mono" placeholder="SOL-00001" autocomplete="off"><button type="button" class="mini" id="btn-cargar-sol">Cargar</button></div>
+          <p class="hint" id="sol-status"></p>
         </div>
       </div>
 
@@ -292,12 +320,12 @@
 
       <div class="row2">
         <div class="field">
-          <label for="f-monto-sol">Monto solicitado / pagado</label>
+          <label for="f-monto-sol" id="lbl-monto">Monto solicitado / pagado</label>
           <div class="money-row">
             <input type="text" id="f-monto-sol" class="money" inputmode="decimal" placeholder="0.00">
             <span class="cur">MXN</span>
           </div>
-          <p class="hint">Lo que te entregaron como anticipo. Si es reembolso sin anticipo, déjalo en 0.</p>
+          <p class="hint" id="monto-hint">Lo que te entregaron como anticipo. Si es reembolso sin anticipo, déjalo en 0.</p>
         </div>
         <div class="field">
           <label for="f-metodo">Método de pago</label>
@@ -334,7 +362,7 @@
         </div>
       </div>
       <div class="field" style="margin-bottom:0">
-        <label for="f-obs">Solicitud de recurso / motivo</label>
+        <label for="f-obs" id="lbl-obs">Solicitud de recurso / motivo</label>
         <textarea id="f-obs" placeholder="Ej. Viáticos para visita a obra Entre Piedras del 5 al 7 de octubre" required></textarea>
       </div>
     </fieldset>
@@ -348,14 +376,14 @@
   </div>
 
   <div class="card" id="card-resumen">
-    <p class="section-title"><span class="section-num">3</span>Resumen</p>
-    <p class="section-hint">Se calcula automáticamente con tus comprobantes.</p>
-    <div class="totals">
+    <p class="section-title"><span class="section-num" id="resumen-num">3</span><span id="resumen-title">Resumen</span></p>
+    <p class="section-hint" id="resumen-hint">Se calcula automáticamente con tus comprobantes.</p>
+    <div class="totals" id="totals-box">
       <div class="tot"><div class="l">Monto solicitado / pagado</div><div class="n" id="t-sol">$0.00</div></div>
       <div class="tot"><div class="l">Monto comprobado</div><div class="n" id="t-comp">$0.00</div></div>
       <div class="tot" id="t-diff-box" data-tone="even"><div class="l" id="t-diff-l">Diferencia</div><div class="n" id="t-diff">$0.00</div></div>
     </div>
-    <p class="letra">Importe con letra: <b id="t-letra">Cero Pesos 00/100 M.N.</b></p>
+    <p class="letra" id="letra-box">Importe con letra: <b id="t-letra">Cero Pesos 00/100 M.N.</b></p>
 
     <p class="error-msg" id="error-msg"></p>
     <div class="submit-row">
@@ -366,7 +394,7 @@
   </form>
 
   <div class="card confirm" id="confirm-view" hidden>
-    <span class="badge-ok">Comprobación enviada</span>
+    <span class="badge-ok" id="confirm-badge">Comprobación enviada</span>
     <p class="ticket-id" id="confirm-id">COMP-00000</p>
     <p id="confirm-text">Tu comprobación ya llegó a Finanzas. Guarda este folio para darle seguimiento.</p>
     <dl class="confirm-summary" id="confirm-summary"></dl>
@@ -556,10 +584,29 @@
   var items = [];
   var seq = 0;
 
-  function insumoOptions() {
+  function normTxt(x) { return String(x || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function insumoOptions(filtro, keep) {
     var gs = CAT.insumos || [];
     if (!gs.length) return optionList(CAT.partidas, 'Selecciona el insumo');
-    return '<option value="" disabled selected>Selecciona el insumo</option>' + gs.map(function (g) { return '<optgroup label="' + esc(g.g) + '">' + g.i.map(function (v) { return '<option>' + esc(v) + '</option>'; }).join('') + '</optgroup>'; }).join('');
+    var words = normTxt(filtro).split(/\s+/).filter(Boolean), n = 0;
+    var html = gs.map(function (g) {
+      var gl = normTxt(g.g);
+      var its = g.i.filter(function (x) { var t = normTxt(x) + ' ' + gl, okw = words.every(function (w) { return t.indexOf(w) >= 0; }); if (okw) n++; return okw || x === keep; });
+      return its.length ? '<optgroup label="' + esc(g.g) + '">' + its.map(function (v) { return '<option>' + esc(v) + '</option>'; }).join('') + '</optgroup>' : '';
+    }).join('');
+    var ph = words.length ? (n ? n + ' resultado' + (n === 1 ? '' : 's') + ' · selecciona el insumo' : 'Sin resultados para "' + esc(filtro) + '"') : 'Selecciona el insumo';
+    return '<option value="" disabled selected>' + ph + '</option>' + html;
+  }
+  function filtrarInsumo(it) {
+    var sel = it.q('.f-partida'), pv = sel.value, f = it.q('.f-ins-q').value.trim();
+    sel.innerHTML = insumoOptions(f, pv);
+    if (pv) { sel.value = pv; if (sel.value !== pv) sel.value = ''; }
+    var opts = sel.querySelectorAll('option:not([disabled])');
+    if (f && opts.length === 1 && sel.value !== opts[0].value) { sel.value = opts[0].value; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+  }
+  function checkPresu(it) {
+    var p = num(it.q('.f-presu').value), w = it.q('.presu-warn'), t = it.total || 0;
+    if (p > 0 && t > p + 0.005) { w.textContent = '⚠ El total del comprobante (' + money(t) + ') excede el presupuesto (' + money(p) + ').'; w.hidden = false; } else w.hidden = true;
   }
   function optionList(list, ph) { return '<option value="" disabled selected>' + ph + '</option>' + list.map(function (v) { return '<option>' + esc(v) + '</option>'; }).join(''); }
 
@@ -582,7 +629,8 @@
       '</div>' +
       '<div class="g2">' +
         '<div class="field"><label>Obra</label><select class="f-obra" required>' + optionList(listaPorEmpresa(OBRAS_POR_EMPRESA, CAT.obras), $('f-empresa').value ? 'Selecciona la obra' : 'Primero selecciona la empresa') + '</select></div>' +
-        '<div class="field"><label>Insumo</label><select class="f-partida" required>' + insumoOptions() + '</select></div>' +
+        '<div class="field"><label>Insumo <a class="presu" href="http://firmemexico.sytes.net:8580/" target="_blank" rel="noopener">¿Cuentas con presupuesto? Consúltalo aquí ↗</a></label><input type="search" class="f-ins-q" placeholder="🔍 Buscar insumo por código o nombre" autocomplete="off"><select class="f-partida" required>' + insumoOptions() + '</select>' +
+          '<label style="margin-top:10px">Presupuesto <span class="opt">(opcional, MXN)</span></label><div class="money-row"><input type="text" class="f-presu money" inputmode="decimal" placeholder="0.00"><span class="cur">MXN</span></div><div class="presu-warn" hidden></div></div>' +
       '</div>' +
       '<div class="g2">' +
         '<div class="field"><label>Proveedor</label><input type="text" class="f-proveedor" list="dl-proveedores" required></div>' +
@@ -611,9 +659,12 @@
     var q = function (c) { return row.querySelector(c); };
     it.q = q;
     if (prefill) { q('.f-obra').value = prefill.obra || ''; q('.f-partida').value = prefill.partida || ''; }
+    q('.f-ins-q').addEventListener('input', function () { filtrarInsumo(it); });
+    q('.f-presu').addEventListener('input', function () { checkPresu(it); });
+    q('.f-presu').addEventListener('blur', function () { if (this.value.trim() !== '') this.value = r2(num(this.value)).toFixed(2); checkPresu(it); });
 
     row.querySelectorAll('.f-cant,.f-pu,.f-iva,.f-risr,.f-riva,.f-otros').forEach(function (inp) {
-      inp.addEventListener('input', function () { calcLine(it); recalcTotals(); });
+      inp.addEventListener('input', function () { calcLine(it); recalcTotals(); checkPresu(it); });
       inp.addEventListener('blur', function () { if (inp.value.trim() !== '') inp.value = inp.classList.contains('f-cant') ? String(r2(num(inp.value))) : r2(num(inp.value)).toFixed(2); });
     });
     q('.iva-btn').addEventListener('click', function () { var s = num(q('.f-sub').value); q('.f-iva').value = r2(s * 0.16).toFixed(2); calcLine(it); recalcTotals(); });
@@ -666,7 +717,7 @@
   }
 
   function esNoFiscal() { var t = document.querySelector('input[name="tipo"]:checked'); return !!(t && /NO FISCALES/.test(t.value)); }
-  function bancoObligatorio() { return recalcTotals().diff < 0 || esNoFiscal(); }
+  function bancoObligatorio() { return MODO === 'sol' || recalcTotals().diff < 0 || esNoFiscal(); }
   function recalcTotals() {
     var sol = r2(num($('f-monto-sol').value));
     var comp = r2(items.reduce(function (a, it) { return a + (it.total || 0); }, 0));
@@ -680,8 +731,8 @@
     $('t-diff').textContent = money(Math.abs(diff));
     $('t-letra').textContent = letras(comp);
     var nf = esNoFiscal();
-    $('clabe-hint').textContent = diff < 0 ? 'Obligatorios: hay ' + money(-diff) + ' a tu favor. Captura la cuenta a la que se te reembolsará y sube tu carátula bancaria.' : nf ? 'Obligatorios en reembolso no fiscal: cuenta de quien recibirá el reembolso y su carátula bancaria.' : 'Solo si hay un reembolso a tu favor.';
-    var ob = diff < 0 || nf;
+    $('clabe-hint').textContent = MODO === 'sol' ? 'Obligatorios: la cuenta a la que Finanzas te depositará el recurso y tu carátula bancaria.' : diff < 0 ? 'Obligatorios: hay ' + money(-diff) + ' a tu favor. Captura la cuenta a la que se te reembolsará y sube tu carátula bancaria.' : nf ? 'Obligatorios en reembolso no fiscal: cuenta de quien recibirá el reembolso y su carátula bancaria.' : 'Solo si hay un reembolso a tu favor.';
+    var ob = MODO === 'sol' || diff < 0 || nf;
     var bb = $('bank-badge'); bb.className = ob ? 'badge warn' : 'badge'; bb.textContent = ob ? 'Obligatorio' : 'Opcional';
     return { sol: sol, comp: comp, diff: diff };
   }
@@ -962,7 +1013,6 @@
     chk($('f-cc'), !$('f-cc').value);
     chk($('f-fecha-sol'), !$('f-fecha-sol').value);
     chk($('f-metodo'), !$('f-metodo').value);
-    chk($('f-folio-sol'), !$('f-folio-sol').value.trim());
     chk($('f-obs'), !$('f-obs').value.trim());
     var tipo = document.querySelector('input[name="tipo"]:checked');
     $('tipo-group').classList.toggle('invalid-group', !tipo);
@@ -974,10 +1024,14 @@
       chk($('f-titular'), !$('f-titular').value.trim());
       chk($('f-clabe'), !clabeValid(clabe));
       chk($('f-banco'), !$('f-banco').value);
-      if (!caratula) { $('caratula-drop').classList.add('invalid'); ok = false; first = first || $('bank-box'); msgs.push('Sube tu carátula bancaria para el reembolso.'); }
+      if (!caratula) { $('caratula-drop').classList.add('invalid'); ok = false; first = first || $('bank-box'); msgs.push(MODO === 'sol' ? 'Sube tu carátula bancaria para el depósito.' : 'Sube tu carátula bancaria para el reembolso.'); }
+    }
+    if (MODO === 'sol') {
+      chk($('f-monto-sol'), !(num($('f-monto-sol').value) > 0));
+      if (!(num($('f-monto-sol').value) > 0)) msgs.push('Escribe el monto que solicitas.');
     }
     var nItems = 0;
-    items.forEach(function (it) {
+    if (MODO === 'comp') items.forEach(function (it) {
       var q = it.q;
       chk(q('.f-obra'), !q('.f-obra').value);
       chk(q('.f-partida'), !q('.f-partida').value);
@@ -992,7 +1046,7 @@
       if (it.dup) { ok = false; first = first || it.row; }
       nItems++;
     });
-    if (items.some(function (it) { return !it.xml && !it.files.length; })) msgs.push('Cada comprobante necesita al menos un archivo (XML, PDF o foto).');
+    if (MODO === 'comp' && items.some(function (it) { return !it.xml && !it.files.length; })) msgs.push('Cada comprobante necesita al menos un archivo (XML, PDF o foto).');
     if (items.some(function (it) { return it.dup; })) msgs.push('Hay facturas repetidas (mismo UUID).');
     if (!ok) {
       flash(['Revisa los campos marcados en rojo.'].concat(msgs).join(' '));
@@ -1032,6 +1086,7 @@
           obra: q('.f-obra').value, partida: q('.f-partida').value,
           proveedor: q('.f-proveedor').value.trim(), rfc: q('.f-rfc').value.trim(),
           folioFactura: q('.f-folio').value.trim(), fechaFactura: q('.f-fecha').value, frente: q('.f-frente').value.trim(),
+          presupuesto: q('.f-presu').value.trim() ? r2(num(q('.f-presu').value)) : '',
           descripcion: q('.f-desc').value.trim(),
           cantidad: r2(num(q('.f-cant').value)), precioUnitario: r2(num(q('.f-pu').value)), subtotal: r2(num(q('.f-sub').value)),
           iva: r2(num(q('.f-iva').value)), retIsr: r2(num(q('.f-risr').value)), retIva: r2(num(q('.f-riva').value)), otros: r2(num(q('.f-otros').value)),
@@ -1048,11 +1103,99 @@
   }
 
   var form = $('comp-form'), overlay = $('overlay'), submitBtn = $('submit-btn');
+
+  // ===== modo: solicitud de recurso / comprobación =====
+  var MODO = 'comp', solCargada = null;
+  function setModo(m) {
+    MODO = m; var sol = m === 'sol';
+    $('start-card').hidden = true; form.hidden = false; $('confirm-view').hidden = true;
+    $('mode-label').textContent = sol ? 'Solicitud de recurso (anticipo)' : 'Comprobación de gastos';
+    $('datos-title').textContent = sol ? 'Datos de la solicitud de recurso' : 'Datos de la comprobación';
+    $('datos-hint').textContent = sol ? 'Quién solicita, quién autoriza, a qué centro de costos se aplica y cuánto necesitas.' : 'Quién comprueba, quién autoriza y a qué centro de costos se aplica.';
+    $('lbl-solicitante').textContent = sol ? 'Nombre de quien solicita' : 'Nombre de quien comprueba';
+    $('lbl-monto').textContent = sol ? 'Monto que solicitas' : 'Monto solicitado / pagado';
+    $('monto-hint').textContent = sol ? 'Cuánto necesitas que Finanzas te deposite.' : 'Lo que te entregaron como anticipo. Si es reembolso sin anticipo, déjalo en 0.';
+    $('lbl-obs').textContent = sol ? 'Motivo de la solicitud' : 'Solicitud de recurso / motivo';
+    $('fld-folio-sol').hidden = sol;
+    $('card-items').hidden = sol;
+    $('totals-box').hidden = sol; $('letra-box').hidden = sol;
+    $('resumen-num').textContent = sol ? '2' : '3';
+    $('resumen-title').textContent = sol ? 'Enviar solicitud' : 'Resumen';
+    $('resumen-hint').textContent = sol ? 'Finanzas recibe tu solicitud y te avisa por correo. Te daremos un folio SOL para tu comprobación.' : 'Se calcula automáticamente con tus comprobantes.';
+    submitBtn.textContent = sol ? 'Enviar solicitud de recurso' : 'Enviar comprobación';
+    $('submit-note').textContent = sol ? 'Recibirás tu folio de solicitud en pantalla y por correo.' : 'Los archivos se guardan en la carpeta de Finanzas.';
+    $('f-fecha-sol').value = todayISO(); updSemana();
+    recalcTotals();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  document.querySelectorAll('#start-card .start-btn').forEach(function (b) { b.addEventListener('click', function () { setModo(b.dataset.m); }); });
+  $('mode-change').addEventListener('click', function (e) { e.preventDefault(); form.hidden = true; $('start-card').hidden = false; window.scrollTo({ top: 0, behavior: 'smooth' }); });
+
+  async function enviarSolicitud() {
+    if (caratula) await caratula.ready;
+    var tipo = document.querySelector('input[name="tipo"]:checked');
+    var d = {
+      accion: 'crearSolicitud',
+      empresa: $('f-empresa').value, solicitante: $('f-solicitante').value.trim(), autoriza: $('f-autoriza').value.trim(),
+      contacto: $('f-contacto').value.trim(), noProveedor: $('f-noprov').value.trim(), centroCostos: $('f-cc').value,
+      fechaSolicitud: todayISO(), semana: weekNum(todayISO()), tipoComprobacion: tipo ? tipo.value : '',
+      montoSolicitado: r2(num($('f-monto-sol').value)), metodoPago: $('f-metodo').value, motivo: $('f-obs').value.trim(),
+      titularCuenta: $('f-titular').value.trim(), clabe: $('f-clabe').value, banco: $('f-banco').value, cuentaBancaria: $('f-cuenta').value,
+      archivosGenerales: caratula && caratula.dataUrl ? [{ nombre: caratula.nombre, tipo: 'caratula', mime: caratula.mime, b64: caratula.dataUrl.split(',')[1] || '' }] : []
+    };
+    $('overlay-text').textContent = 'Enviando solicitud…';
+    var res = await fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(d) });
+    var out = await res.json();
+    if (!out || !out.ok) throw new Error((out && out.message) || 'El servidor no pudo registrar la solicitud.');
+    saveBankMemory();
+    $('confirm-badge').textContent = 'Solicitud de recurso enviada';
+    $('confirm-id').textContent = out.id;
+    $('confirm-text').innerHTML = 'Tu solicitud llegó a Finanzas. <b>Guarda este folio</b>: cuando compruebes tus gastos, escríbelo en "Folio de solicitud de recurso" y se cargarán tus datos.';
+    var rows = [['Solicita', d.solicitante], ['Empresa', d.empresa], ['Centro de costos', d.centroCostos], ['Tipo', d.tipoComprobacion], ['Monto solicitado', money(d.montoSolicitado)], ['Fecha', fmtDate(d.fechaSolicitud)], ['Motivo', d.motivo]];
+    $('confirm-summary').innerHTML = rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('');
+    $('confirm-table').innerHTML = ''; $('dl-pdf').hidden = true; $('pdf-status').hidden = true;
+    $('reset-link').textContent = 'Volver al inicio';
+    form.hidden = true; $('confirm-view').hidden = false; window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // cargar una solicitud de recurso en la comprobación
+  function setSolStatus(t, cls) { var e = $('sol-status'); e.textContent = t; e.className = 'hint' + (cls ? ' ' + cls : ''); }
+  async function cargarSolicitud() {
+    var f = $('f-folio-sol').value.trim().toUpperCase().replace(/\s+/g, '');
+    if (/^\d+$/.test(f)) f = 'SOL-' + ('0000' + f).slice(-5);
+    $('f-folio-sol').value = f;
+    if (!/^SOL-\d{3,}$/.test(f)) { setSolStatus('Escribe el folio como SOL-00001.', 'bad'); return; }
+    var correo = $('f-contacto').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { setSolStatus('Primero escribe tu correo de contacto (el mismo con el que hiciste la solicitud).', 'bad'); $('f-contacto').focus(); return; }
+    setSolStatus('Buscando ' + f + '…');
+    try {
+      var out = await fetch(APPS_SCRIPT_URL + '?action=solicitud&folio=' + encodeURIComponent(f) + '&correo=' + encodeURIComponent(correo)).then(function (r) { return r.json(); });
+      if (!out || !out.ok) { solCargada = null; setSolStatus(out && out.error === 'not_found' ? 'No encontramos ' + f + ' con ese correo.' : 'No se pudo consultar la solicitud.', 'bad'); return; }
+      var s = out.solicitud; solCargada = s;
+      $('f-solicitante').value = s.solicitante || $('f-solicitante').value;
+      $('f-autoriza').value = s.autoriza || $('f-autoriza').value;
+      if (s.noProveedor) $('f-noprov').value = s.noProveedor;
+      if (s.empresa) { $('f-empresa').value = s.empresa; fillCc(); fillObras(); }
+      if (s.centroCostos) $('f-cc').value = s.centroCostos;
+      var fsol = String(s.fechaSolicitud || '').slice(0, 10); if (/^\d{4}-\d{2}-\d{2}$/.test(fsol)) { $('f-fecha-sol').value = fsol; updSemana(); }
+      if (s.tipoComprobacion) { var r = document.querySelector('input[name="tipo"][value="' + s.tipoComprobacion + '"]'); if (r) { r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); } }
+      $('f-monto-sol').value = Number(s.montoSolicitado || 0).toFixed(2);
+      if (s.metodoPago) $('f-metodo').value = s.metodoPago;
+      if (s.motivo && !$('f-obs').value.trim()) $('f-obs').value = s.motivo;
+      ['f-solicitante', 'f-autoriza', 'f-empresa', 'f-cc', 'f-monto-sol', 'f-obs'].forEach(function (id) { $(id).classList.remove('invalid'); });
+      recalcTotals();
+      setSolStatus('✓ Se cargó ' + f + ' (' + (s.estadoLabel || s.estado || '') + ') · ' + money(s.montoSolicitado) + (s.folioComprobacion ? ' · ojo: ya está ligada a ' + s.folioComprobacion : ''), s.folioComprobacion ? 'bad' : 'ok');
+    } catch (e) { setSolStatus('No se pudo consultar la solicitud.', 'bad'); }
+  }
+  $('btn-cargar-sol').addEventListener('click', cargarSolicitud);
+  $('f-folio-sol').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); cargarSolicitud(); } });
+  $('f-folio-sol').addEventListener('input', function () { solCargada = null; setSolStatus(''); });
   form.addEventListener('submit', async function (ev) {
     ev.preventDefault();
     if (!validate()) return;
     if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('http') !== 0) { flash('El formulario aún no está conectado al servidor de Finanzas.'); return; }
     submitBtn.disabled = true; overlay.hidden = false; $('overlay-text').textContent = 'Preparando archivos…';
+    if (MODO === 'sol') { try { await enviarSolicitud(); } catch (err) { flash((err && err.message ? err.message : 'No se pudo enviar.') + ' Tus datos siguen aquí: intenta de nuevo.'); } finally { submitBtn.disabled = false; overlay.hidden = true; } return; }
     try {
       await Promise.all(items.reduce(function (a, it) { return a.concat(it.files.map(function (f) { return f.ready; })); }, caratula ? [caratula.ready] : []));
       var data = collect();
@@ -1117,7 +1260,8 @@
     doc.text('CÓDIGO: FO-GF-01', W - M, 8.5, { align: 'right' });
     doc.setFont('helvetica', 'bold'); doc.text('FOLIO: ' + folio, W - M, 12.5, { align: 'right' });
     doc.setFont('helvetica', 'normal'); doc.text('FECHA COMPROBACIÓN: ' + fmtDate(todayISO()), W - M, 16.5, { align: 'right' });
-    var y = 21.5;
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(180, 83, 9); doc.text('ESTATUS: RECIBIDA (PENDIENTE DE AUTORIZAR)', W - M, 20.3, { align: 'right' }); doc.setTextColor(29, 29, 27); doc.setFont('helvetica', 'normal');
+    var y = 23.5;
     var ef = EMP_FISCAL[d.empresa];
     if (ef) { doc.setFontSize(7.2); doc.text('RFC: ' + ef.rfc + '    DOMICILIO FISCAL: ' + ef.domicilio + '    RÉGIMEN FISCAL: ' + ef.regimen, M, y); y += 2.5; }
     var diffL = d.diferencia > 0 ? 'POR COMPROBAR / DEVOLVER' : d.diferencia < 0 ? 'A REEMBOLSAR AL COLABORADOR' : 'DIFERENCIA';
@@ -1183,7 +1327,8 @@
     $('f-solicitante').value = keep.solicitante; $('f-autoriza').value = keep.autoriza; $('f-contacto').value = keep.contacto; $('f-empresa').value = keep.empresa; $('f-cc').value = keep.cc;
     caratula = null; lastPdf = null; $('caratula-name').textContent = 'Toca o arrastra el archivo'; $('caratula-drop').classList.remove('has-file'); updClabe(); loadBankMemory();
     $('f-fecha-sol').value = todayISO(); updSemana(); addItem(); recalcTotals();
-    $('confirm-view').hidden = true; form.hidden = false; window.scrollTo({ top: 0 });
+    $('confirm-badge').textContent = 'Comprobación enviada'; $('dl-pdf').hidden = false; $('pdf-status').hidden = false; $('reset-link').textContent = 'Enviar otra comprobación'; setSolStatus(''); solCargada = null;
+    $('confirm-view').hidden = true; form.hidden = true; $('start-card').hidden = false; window.scrollTo({ top: 0 });
   });
   document.addEventListener('input', function (e) { if (e.target.classList && e.target.classList.contains('invalid') && String(e.target.value).trim()) e.target.classList.remove('invalid'); });
   document.addEventListener('change', function (e) { if (e.target.name === 'tipo') $('tipo-group').classList.remove('invalid-group'); if (e.target.classList && e.target.classList.contains('invalid') && e.target.value) e.target.classList.remove('invalid'); });
