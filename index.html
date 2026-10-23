@@ -541,14 +541,27 @@
   $('f-solicitante').addEventListener('change', function () { if (!$('f-titular').value.trim()) $('f-titular').value = this.value.trim().toUpperCase(); });
   function readCaratulaPdf(file) {
     file.arrayBuffer().then(function (buf) { return loadPdfJs().then(function (lib) { return lib.getDocument({ data: buf }).promise; }); })
-      .then(function (doc) { return doc.getPage(1).then(function (p) { return p.getTextContent(); }); })
-      .then(function (tc) {
-        var t = tc.items.map(function (x) { return x.str; }).join(' ');
+      .then(function (doc) {
+        var ps = []; for (var i = 1; i <= Math.min(doc.numPages, 2); i++) ps.push(doc.getPage(i).then(function (p) { return p.getTextContent(); }).then(function (tc) { return tc.items.map(function (x) { return x.str; }).join(' '); }));
+        return Promise.all(ps);
+      })
+      .then(function (pages) {
+        var t = pages.join(' '), tn = t.replace(/\s+/g, ' '), leido = [];
         var digits = t.replace(/(\d)[ -](?=\d)/g, '$1'), m, re = /\d{18}/g, found = '';
         while ((m = re.exec(digits))) { if (clabeValid(m[0])) { found = m[0]; break; } }
-        if (found && !$('f-clabe').value) { $('f-clabe').value = found; updClabe(); $('clabe-check').textContent += ' · leída de la carátula'; }
-        var mc = t.replace(/\s+/g, ' ').match(/(?:cuenta|no\.? de cuenta|n[uú]mero de cuenta)\s*:?\s*(\d{8,12})\b/i);
-        if (mc && !$('f-cuenta').value) $('f-cuenta').value = mc[1];
+        if (found && !$('f-clabe').value) { $('f-clabe').value = found; updClabe(); leido.push('CLABE'); }
+        var mc = tn.match(/(?:no\.?\s*de\s*cuenta|n[uú]mero\s*de\s*cuenta|cuenta)\s*:?\s*(\d{8,12})\b/i);
+        if (mc && !$('f-cuenta').value) { $('f-cuenta').value = mc[1]; leido.push('cuenta'); }
+        var mt = tn.match(/(?:nombre\s+del\s+(?:titular|cliente)|titular(?:\s+de\s+la\s+cuenta)?|cliente|beneficiario|nombre)\s*:?\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ.\s]{4,70}?)(?=\s+(?:no\.?\s|n[uú]mero|cuenta|clabe|rfc|r\.f\.c|domicilio|direcci[oó]n|calle|sucursal|fecha|periodo|per[ií]odo|c\.?p\.?|moneda|tipo|plaza)|\s*$)/i);
+        if (mt) {
+          var tit = mt[1].replace(/\s+/g, ' ').trim().toUpperCase(), cur = $('f-titular').value.trim().toUpperCase();
+          if (tit.split(' ').length >= 2 && (!cur || cur === $('f-solicitante').value.trim().toUpperCase())) { $('f-titular').value = tit; $('f-titular').classList.remove('invalid'); leido.push('titular'); }
+        }
+        if (!$('f-banco').value && CAT.bancos) {
+          var up = tn.toUpperCase(), bk = CAT.bancos.filter(function (b) { return b.length > 2 && new RegExp('\\b' + b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(up); })[0];
+          if (bk) { $('f-banco').value = bk; leido.push('banco'); }
+        }
+        if (leido.length) $('clabe-check').textContent = ($('clabe-check').textContent ? $('clabe-check').textContent + ' · ' : '') + 'Leído de la carátula: ' + leido.join(', ');
       }).catch(function () {});
   }
   var caratula = null;
@@ -834,16 +847,73 @@
     if ((m = t.match(/(\d{1,2})[-\/ ]?(?:de )?([a-záé]{3})[a-záé]*\.?[-\/ ]?(?:de(?:l)? )?(20\d{2})/i)) && MESES[m[2].toLowerCase().slice(0, 3)]) return isoOf(m[3], MESES[m[2].toLowerCase().slice(0, 3)], m[1]);
     return '';
   }
+  // ---- lectura de la representación impresa (PDF) de la factura ----
+  var RFC_RE = /\b([A-ZÑ&]{3,4})(\d{2})(\d{2})(\d{2})([A-Z\d]{2}[A\d])\b/g;
+  var MONEY_RE = /^[^\d$]{0,25}?\$?\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+\.\d{2})(?!\d)(?!\s*%)/;
+  var LEGAL_SUF = /\b(S\.?\s?A\.?\s?P?\.?\s?I?\.?\s?(?:DE\s+)?C\.?\s?V\.?|S\.?\s?DE\s+R\.?\s?L\.?(?:\s+DE\s+C\.?\s?V\.?)?|S\.?\s?C\.?|A\.?\s?C\.?|S\.?\s?A\.?S\.?)\b/i;
+  function amtAfter(t, re, pick) {
+    var m, out = null; re.lastIndex = 0;
+    while ((m = re.exec(t))) {
+      var pre = t.slice(Math.max(0, m.index - 14), m.index), post = t.slice(m.index + m[0].length);
+      if (pick && pick.skip && pick.skip(pre, post)) continue;
+      var a = post.match(MONEY_RE);
+      if (a) { out = num(a[1]); if (!pick || !pick.last) break; }
+    }
+    return out;
+  }
+  function rfcValido(r) { var m = /^([A-ZÑ&]{3,4})(\d{2})(\d{2})(\d{2})/.exec(r); return !!m && +m[3] >= 1 && +m[3] <= 12 && +m[4] >= 1 && +m[4] <= 31; }
+  function limpiaNombre(x) {
+    x = String(x || '').replace(/\s+/g, ' ').replace(/^[\s:.,\-]+|[\s:,\-]+$/g, '').trim();
+    x = x.replace(/\b(R\.?F\.?C\.?|RFC del emisor|Nombre|Emisor|Raz[oó]n social)\s*:?\s*$/i, '').trim();
+    if (x.length < 3 || !/[A-ZÁÉÍÓÚÑ]{3}/i.test(x) || /^(rfc|r\.f\.c|fecha|folio|serie|factura|cfdi)\b/i.test(x)) return '';
+    return x.toUpperCase().slice(0, 120);
+  }
   function parseInvoiceText(text) {
     var t = text.replace(/\s+/g, ' ');
-    var info = { fecha: '', uuid: '', total: 0 };
+    var info = { fecha: '', uuid: '', total: 0, subtotal: 0, iva: null, retIsr: 0, retIva: 0, rfc: '', nombre: '', folio: '' };
     var u = t.match(/[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}/i);
     if (u) info.uuid = u[0].toUpperCase();
     var re = /(fecha(?: y hora)? de emisi[oó]n|fecha emisi[oó]n|emitid[oa] el|fecha de expedici[oó]n|fecha:)/ig, mm;
     while ((mm = re.exec(t)) && !info.fecha) info.fecha = findDate(t.slice(mm.index + mm[0].length, mm.index + mm[0].length + 60));
     if (!info.fecha) info.fecha = findDate(t);
-    var tot = t.match(/total\s*(?:a pagar|mxn|neto)?\s*:?\s*\$?\s*([\d,]+\.\d{2})(?![\s\S]*total\s*(?:a pagar|mxn|neto)?\s*:?\s*\$?\s*[\d,]+\.\d{2})/i);
-    if (tot) info.total = num(tot[1]);
+    var notRet = { skip: function (pre, post) { return /ret/i.test(pre) || /^\W{0,3}ret/i.test(post); } };
+    info.subtotal = amtAfter(t, /\bsub\s*-?\s*total\b/ig) || 0;
+    info.retIsr = amtAfter(t, /(ret(?:enci[oó]n|enido|\.)?\s*(?:de\s+|del\s+)?I\.?S\.?R\.?|I\.?S\.?R\.?\s*ret(?:enido|enci[oó]n)?)/ig) || 0;
+    info.retIva = amtAfter(t, /(ret(?:enci[oó]n|enido|\.)?\s*(?:de\s+|del\s+)?I\.?V\.?A\.?|I\.?V\.?A\.?\s*ret(?:enido|enci[oó]n)?)/ig) || 0;
+    info.iva = amtAfter(t, /\b(?:I\.?V\.?A\.?(?:\s*trasladado)?|impuestos?\s+trasladados?(?:\s+I\.?V\.?A\.?)?|total\s+impuestos\s+trasladados)\b(?:\s*\(?\s*(?:tasa\s*)?(?:16|8)(?:\.0+)?\s*%\s*\)?)?/ig, notRet);
+    info.total = amtAfter(t, /\btotal\b(?!\s*(?:de\s+)?impuestos)/ig, { last: true, skip: function (pre) { return /sub\s*-?\s*$/i.test(pre); } }) || 0;
+    if (info.subtotal && info.total) {
+      var ivaCalc = r2(info.total - info.subtotal + info.retIsr + info.retIva);
+      if (info.iva == null && ivaCalc >= 0 && ivaCalc <= info.subtotal * 0.17) info.iva = ivaCalc;
+    } else if (!info.subtotal && info.total && info.iva != null) {
+      info.subtotal = r2(info.total - info.iva + info.retIsr + info.retIva);
+    }
+    if (info.subtotal && info.total && info.subtotal > info.total + info.retIsr + info.retIva + 0.01) { info.subtotal = 0; info.iva = null; }
+    var propios = EMPRESAS.map(function (e) { return e.rfc; }).filter(Boolean).concat(['XAXX010101000', 'XEXX010101000']);
+    var cands = [], rm, T = t.toUpperCase(); RFC_RE.lastIndex = 0;
+    while ((rm = RFC_RE.exec(T))) {
+      var r = rm[0]; if (!rfcValido(r) || propios.indexOf(r) >= 0) continue;
+      var antes = t.slice(Math.max(0, rm.index - 90), rm.index);
+      if (/receptor|cliente|facturado a|uso cfdi/i.test(antes.slice(-60)) && !/emisor/i.test(antes.slice(-40))) continue;
+      cands.push({ rfc: r, idx: rm.index });
+    }
+    var em = cands.filter(function (c) { return /emisor/i.test(t.slice(Math.max(0, c.idx - 160), c.idx)); })[0] || cands[0];
+    if (em) info.rfc = em.rfc;
+    var STOP = '(?=\\s*(?:R\\.?F\\.?C\\.?|R[eé]gimen|Domicilio|Lugar|C\\.?\\s?P\\.?\\s*:|C[oó]digo postal|Folio|Serie|Fecha|Receptor|Uso\\s|Tel|Calle|Direcci[oó]n|Expedido|No\\.?\\s*de\\s*serie|Certificado|$))';
+    ['nombre(?:\\s+o\\s+raz[oó]n\\s+social)?(?:\\s+del)?\\s+emisor', 'raz[oó]n\\s+social(?:\\s+del\\s+emisor)?', '(?<!R\\.?F\\.?C\\.?\\s{0,3})\\bemisor\\b'].some(function (lab) {
+      var ml = new RegExp(lab + '\\s*:?\\s*(.{3,150}?)' + STOP, 'i').exec(t);
+      if (ml) { var nm = limpiaNombre(ml[1].replace(/^[A-ZÑ&]{3,4}\d{6}[A-Z\d]{3}\s*/i, '')); if (nm) { info.nombre = nm; return true; } }
+      return false;
+    });
+    if (!info.nombre && em) {
+      var before = t.slice(Math.max(0, em.idx - 110), em.idx).replace(/R\.?F\.?C\.?\s*(?:del emisor)?\s*:?\s*$/i, '');
+      var suf = before.match(new RegExp('([A-ZÁÉÍÓÚÑ0-9&.,\'\\- ]{3,90}?' + LEGAL_SUF.source + ')\\s*$', 'i'));
+      var tail = suf ? suf[1] : (before.match(/([A-ZÁÉÍÓÚÑ&][A-ZÁÉÍÓÚÑ0-9&.,'\- ]{4,80})\s*$/) || [])[1];
+      info.nombre = limpiaNombre(tail);
+    }
+    var sf = t.match(/\bserie\s*:?\s*([A-Z]{1,6})\b.{0,25}?\bfolio\s*(?!fiscal)(?:interno\s*)?:?\s*([A-Z]?\d{1,12})\b/i);
+    if (sf) info.folio = sf[1].toUpperCase() + '-' + sf[2];
+    else { var fo = t.match(/\bfolio\s*(?!fiscal)(?:interno\s*)?(?:no\.?\s*)?:?\s*([A-Z]{0,6}-?\d{1,12})\b/i); if (fo) info.folio = fo[1].toUpperCase(); }
     return info;
   }
   function readInvoicePdf(it, file) {
@@ -855,13 +925,27 @@
       return Promise.all(pages);
     }).then(function (texts) {
       var info = parseInvoiceText(texts.join(' '));
-      if (!info.fecha && !info.uuid) return;
+      if (!info.fecha && !info.uuid && !info.total && !info.rfc) return;
       it.pdfInfo = info;
       var q = it.q;
       if (!it.cfdi) {
+        var setv = function (c, v) { if (v && !q(c).value.trim()) { q(c).value = v; q(c).classList.remove('invalid'); } };
         if (info.fecha) { q('.f-fecha').value = info.fecha; q('.f-fecha').classList.remove('invalid'); }
         if (info.uuid && !it.fiscalManual) setFiscal(it, true);
-        if (info.total && !num(q('.f-pu').value)) { q('.f-pu').value = info.total.toFixed(2); calcLine(it); recalcTotals(); }
+        setv('.f-proveedor', info.nombre); setv('.f-rfc', info.rfc); setv('.f-folio', info.folio);
+        if (!num(q('.f-pu').value) && (info.subtotal || info.total)) {
+          q('.f-cant').value = '1';
+          if (info.subtotal) {
+            q('.f-pu').value = info.subtotal.toFixed(2);
+            q('.f-iva').value = info.iva != null ? info.iva.toFixed(2) : '';
+            q('.f-risr').value = info.retIsr ? info.retIsr.toFixed(2) : '';
+            q('.f-riva').value = info.retIva ? info.retIva.toFixed(2) : '';
+            var otros = info.total ? r2(info.total - (info.subtotal + (info.iva || 0) - info.retIsr - info.retIva)) : 0;
+            q('.f-otros').value = Math.abs(otros) >= 0.5 ? otros.toFixed(2) : '';
+          } else q('.f-pu').value = info.total.toFixed(2);
+          q('.f-pu').classList.remove('invalid');
+          calcLine(it); recalcTotals(); checkPresu(it);
+        }
       }
       updVenc(it); checkDupUUIDs(); renderCfdi(it);
     }).catch(function () {});
@@ -937,7 +1021,9 @@
     if (!c) {
       var p = it.pdfInfo;
       if (!p && !future && !it.dup) { s.hidden = true; updBadge(it); return; }
-      s.innerHTML = (p ? '<div><span class="pdf-read">✓ Leído del PDF:</span> ' + (p.fecha ? 'fecha de emisión <b>' + fmtDate(p.fecha) + '</b>' : 'sin fecha') + (p.uuid ? ' · folio fiscal <span class="mono">' + esc(p.uuid) + '</span>' : '') + (p.total ? ' · total ' + money(p.total) : '') + '</div>' + (p.uuid ? '<div class="k">Sube también el XML para leer los importes exactos.</div>' : '') : '') +
+      s.innerHTML = (p ? '<div><span class="pdf-read">✓ Leído del PDF:</span> ' + [p.nombre ? '<b>' + esc(p.nombre) + '</b>' : '', p.rfc ? '<span class="mono">' + esc(p.rfc) + '</span>' : '', p.folio ? 'folio ' + esc(p.folio) : '', p.fecha ? 'emisión <b>' + fmtDate(p.fecha) + '</b>' : 'sin fecha'].filter(Boolean).join(' · ') + '</div>' +
+        '<div>' + [p.subtotal ? 'Subtotal ' + money(p.subtotal) : '', p.iva != null && p.subtotal ? 'IVA ' + money(p.iva) : '', p.retIsr ? 'Ret. ISR ' + money(p.retIsr) : '', p.retIva ? 'Ret. IVA ' + money(p.retIva) : '', p.total ? 'Total <b>' + money(p.total) + '</b>' : ''].filter(Boolean).join(' · ') + (p.uuid ? ' · UUID <span class="mono">' + esc(p.uuid) + '</span>' : '') + '</div>' +
+        '<div class="k">' + (p.uuid ? 'Revisa los datos leídos; si tienes el XML súbelo para tomar los importes exactos.' : 'Revisa los datos leídos del PDF.') + '</div>' : '') +
         (it.dup ? '<div class="w">⚠ Este folio fiscal ya está en otro comprobante de esta comprobación.</div>' : '') +
         (future ? '<div class="w">⚠ La fecha de emisión es posterior a hoy.</div>' : '');
       s.hidden = false; updBadge(it); return;

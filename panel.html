@@ -225,8 +225,9 @@
   <div class="gate-card">
     <div class="stripe"></div>
     <h2>Panel de Comprobaciones</h2>
-    <p>Acceso restringido a Finanzas. Ingresa la contraseña para continuar.</p>
+    <p>Acceso restringido a Finanzas. Ingresa tu usuario y contraseña.</p>
     <form id="gate-form">
+      <input type="text" id="gate-user" placeholder="Usuario (ej. IVAN SANCHEZ)" autocomplete="username" autocapitalize="characters">
       <input type="password" id="gate-password" placeholder="Contraseña" autocomplete="current-password" required>
       <button type="submit" class="primary" id="gate-btn">Entrar</button>
       <p class="gate-error" id="gate-error"></p>
@@ -243,7 +244,7 @@
       <h1>Panel de Comprobaciones</h1>
       <p class="lede">Revisión de comprobaciones de gastos, anticipos y reembolsos (FO-GF-01).</p>
     </div>
-    <div class="conn" id="conn">Conectando…</div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div class="conn" id="conn">Conectando…</div><div class="conn" id="who-box" hidden><b id="who"></b> · <button type="button" id="logout" style="font:inherit;font-size:12px;background:none;border:none;color:#FFCD00;text-decoration:underline;cursor:pointer;padding:0">Salir</button></div></div>
   </div>
 </div>
 
@@ -373,18 +374,21 @@
     var qs = Object.keys(params).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
     return fetch(APPS_SCRIPT_URL + '?' + qs + '&key=' + encodeURIComponent(KEY)).then(function (r) { return r.json(); });
   }
+  var USER = '';
   function tryLogin(pwd, silent) {
     KEY = pwd;
     $('gate-btn').disabled = true; $('gate-error').textContent = silent ? '' : 'Verificando…';
     return api({ action: 'list' }).then(function (d) {
       $('gate-btn').disabled = false;
-      if (!d || !d.ok) { KEY = ''; try { sessionStorage.removeItem('gfm_comp_key'); } catch (e) {} $('gate-error').textContent = d && d.error === 'unauthorized' ? 'Contraseña incorrecta.' : 'No se pudo conectar con el servidor.'; return; }
+      if (!d || !d.ok) { KEY = ''; try { sessionStorage.removeItem('gfm_comp_key'); } catch (e) {} $('gate-error').textContent = d && d.error === 'unauthorized' ? 'Usuario o contraseña incorrectos.' : 'No se pudo conectar con el servidor.'; return; }
       try { sessionStorage.setItem('gfm_comp_key', pwd); } catch (e) {}
+      USER = d.usuario || ''; $('who').textContent = USER ? '👤 ' + USER : ''; $('who-box').hidden = !USER;
       $('gate').hidden = true; $('app').hidden = false;
       start(d.items || []);
     }).catch(function () { $('gate-btn').disabled = false; $('gate-error').textContent = 'No se pudo conectar con el servidor.'; });
   }
-  $('gate-form').addEventListener('submit', function (e) { e.preventDefault(); tryLogin($('gate-password').value); });
+  $('gate-form').addEventListener('submit', function (e) { e.preventDefault(); var u = $('gate-user').value.trim().toUpperCase().replace(/\s+/g, ' '); tryLogin(u ? u + '|' + $('gate-password').value : $('gate-password').value); });
+  $('logout').addEventListener('click', function () { try { sessionStorage.removeItem('gfm_comp_key'); } catch (e) {} location.reload(); });
   try { var saved = sessionStorage.getItem('gfm_comp_key'); if (saved) tryLogin(saved, true); } catch (e) {}
 
   // ===== datos =====
@@ -429,7 +433,7 @@
       c.innerHTML =
         '<div class="sol-top"><div><span class="cmp-id">' + esc(r.folio) + '</span> <span class="tag ' + lb[2] + '">' + esc(lb[1]) + '</span>' + (r.folioComprobacion ? ' <span class="tag ok">Comprobada: ' + esc(r.folioComprobacion) + '</span>' : (r.estado === 'pagada' ? ' <span class="tag warn">Sin comprobar</span>' : '')) +
         '<div style="font-weight:700;margin-top:6px">' + esc(r.solicitante) + '</div><div class="cmp-meta">' + esc(r.empresa) + ' · ' + esc(r.centroCostos) + ' · Autoriza: ' + esc(r.autoriza) + '</div></div>' +
-        '<div style="text-align:right"><div class="sol-amt">' + money(r.montoSolicitado) + '</div><span class="time">' + esc(fdatetime(r.receivedAt)) + '</span></div></div>' +
+        '<div style="text-align:right"><div class="sol-amt">' + money(r.montoSolicitado) + '</div><span class="time">' + esc(fdatetime(r.receivedAt)) + '</span>' + (r.actualizadoPor ? '<div class="time">Revisó: ' + esc(r.actualizadoPor) + '</div>' : '') + '</div></div>' +
         '<div class="sol-grid"><div class="sol-kv">' +
           '<div><b>Motivo</b>' + esc(r.motivo) + '</div><div><b>Tipo</b>' + esc(r.tipoComprobacion) + ' · <b>Pago</b>' + esc(r.metodoPago) + '</div>' +
           '<div><b>Depositar a</b>' + esc(r.titularCuenta) + ' · ' + esc(r.banco) + ' · <span class="mono">' + esc(r.clabe) + '</span>' + (r.cuentaBancaria ? ' · Cta ' + esc(r.cuentaBancaria) : '') + '</div>' +
@@ -456,7 +460,7 @@
     w.hidden = true; card.querySelectorAll('.act').forEach(function (b) { b.disabled = true; });
     api({ action: 'updateSol', id: r.folio, estado: est, comentario: com }).then(function (d) {
       if (!d || !d.ok) throw 0;
-      r.estado = est; r.comentariosAdmin = com; loadSol().then(renderSol);
+      r.estado = est; r.comentariosAdmin = com; r.actualizadoPor = USER; loadSol().then(renderSol);
     }).catch(function () { setConn('err', 'No se guardó la solicitud ' + r.folio); renderSol(); });
   }
   document.querySelectorAll('.tabs .tab').forEach(function (t) {
@@ -592,7 +596,7 @@
     var r = byFolio(folio); if (!r) return;
     openFolio = folio;
     $('d-title').textContent = r.folio;
-    $('d-sub').textContent = 'Recibida ' + fdatetime(r.receivedAt) + (r.fechaActualizacion ? ' · Actualizada ' + fdatetime(new Date(r.fechaActualizacion).getTime()) : '');
+    $('d-sub').textContent = 'Recibida ' + fdatetime(r.receivedAt) + (r.fechaActualizacion ? ' · Actualizada ' + fdatetime(new Date(r.fechaActualizacion).getTime()) : '') + (r.actualizadoPor ? ' por ' + r.actualizadoPor : '');
     refreshDetailTags(r);
     var kv = [
       ['Comprueba', r.solicitante], ['Jefe que autoriza', r.autoriza], ['Contacto', r.contacto], ['No. proveedor', r.noProveedor || '—'],
