@@ -246,7 +246,7 @@
       <h1>Panel de Comprobaciones</h1>
       <p class="lede">Revisión de comprobaciones de gastos, anticipos y reembolsos (FO-GF-01).</p>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div class="conn" id="conn">Conectando…</div><div class="conn" id="who-box" hidden><b id="who"></b> · <button type="button" id="logout" style="font:inherit;font-size:12px;background:none;border:none;color:#FFCD00;text-decoration:underline;cursor:pointer;padding:0">Salir</button></div></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div class="conn" id="who-box"><b id="who" style="display:none"></b><button type="button" id="logout" style="font:inherit;font-size:12px;background:none;border:none;color:#FFCD00;text-decoration:underline;cursor:pointer;padding:0">Cerrar sesión</button></div><div class="conn" id="conn">Conectando…</div></div>
   </div>
 </div>
 
@@ -387,7 +387,7 @@
       $('gate-btn').disabled = false;
       if (!d || !d.ok) { KEY = ''; try { sessionStorage.removeItem('gfm_comp_key'); } catch (e) {} $('gate-error').textContent = d && d.error === 'unauthorized' ? 'Usuario o contraseña incorrectos.' : 'No se pudo conectar con el servidor.'; return; }
       try { sessionStorage.setItem('gfm_comp_key', pwd); } catch (e) {}
-      USER = d.usuario || ''; $('who').textContent = USER ? '👤 ' + USER : ''; $('who-box').hidden = !USER;
+      USER = d.usuario || ''; $('who').textContent = USER ? '👤 ' + USER : ''; $('who-box').hidden = false;
       $('gate').hidden = true; $('app').hidden = false;
       start(d.items || []);
     }).catch(function () { $('gate-btn').disabled = false; $('gate-error').textContent = 'No se pudo conectar con el servidor.'; });
