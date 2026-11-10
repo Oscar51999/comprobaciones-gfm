@@ -86,6 +86,21 @@
   button.primary:hover { background: #1A3150; }
   button.secondary, a.secondary { font: inherit; font-weight: 600; font-size: 12.5px; color: var(--ink-soft); background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
   button.secondary:hover, a.secondary:hover { border-color: var(--turquoise); color: var(--turquoise-deep); }
+  .prov-form { border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px; background: var(--surface); display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: end; }
+  .prov-form label { display: block; font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 4px; }
+  .prov-form input { font: inherit; font-size: 13.5px; width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; background: var(--paper); color: var(--ink); }
+  .prov-form .pf-acts { display: flex; gap: 8px; }
+  .prov-form .pf-msg { grid-column: 1 / -1; font-size: 13px; min-height: 0; }
+  .prov-form .pf-msg.err { color: #B42318; } .prov-form .pf-msg.ok { color: var(--turquoise-deep); }
+  .prov-table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .prov-table th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .3px; color: var(--ink-soft); padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  .prov-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .prov-table tr:last-child td { border-bottom: none; }
+  .prov-table td.r { text-align: right; white-space: nowrap; }
+  .prov-table .rfc { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+  #view-prov .ds { font-size: 12.5px; color: var(--ink-soft); }
+  .prov-more { font-size: 12.5px; color: var(--ink-soft); margin-top: 8px; }
+  @media (max-width: 640px) { .prov-form { grid-template-columns: 1fr; } .prov-table .no { display: none; } }
   .docs-box { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
   .docs-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-size: 13.5px; }
   .docs-list { display: grid; gap: 6px; font-size: 13px; }
@@ -262,6 +277,22 @@
   <div class="tabs" role="tablist">
     <button type="button" class="tab on" data-v="comp" role="tab">Comprobaciones</button>
     <button type="button" class="tab" data-v="sol" role="tab">Solicitudes de recurso<span class="tab-n" id="sol-n" hidden></span></button>
+    <button type="button" class="tab" data-v="prov" role="tab">Proveedores</button>
+  </div>
+  <div id="view-prov" hidden>
+    <div class="toolbar">
+      <input type="search" id="pq" placeholder="Buscar proveedor por nombre o RFC…">
+      <span class="spacer"></span>
+      <span class="ds" id="p-count"></span>
+      <button type="button" class="primary" id="p-new">＋ Nuevo proveedor</button>
+    </div>
+    <form class="prov-form" id="p-form" hidden autocomplete="off">
+      <div><label for="p-nombre" id="p-form-t">Nombre o razón social</label><input type="text" id="p-nombre" maxlength="200" required></div>
+      <div><label for="p-rfc">RFC (opcional)</label><input type="text" id="p-rfc" maxlength="13" autocapitalize="characters"></div>
+      <div class="pf-acts"><button type="submit" class="primary" id="p-save">Guardar</button><button type="button" class="secondary" id="p-cancel">Cancelar</button></div>
+      <div class="pf-msg" id="p-msg"></div>
+    </form>
+    <div id="p-list"></div>
   </div>
   <div id="view-comp">
   <div class="stats">
@@ -485,11 +516,63 @@
   document.querySelectorAll('.tabs .tab').forEach(function (t) {
     t.addEventListener('click', function () {
       document.querySelectorAll('.tabs .tab').forEach(function (x) { x.classList.toggle('on', x === t); });
-      var sol = t.dataset.v === 'sol'; $('view-comp').hidden = sol; $('view-sol').hidden = !sol;
+      var v = t.dataset.v, sol = v === 'sol'; $('view-comp').hidden = v !== 'comp'; $('view-sol').hidden = !sol; $('view-prov').hidden = v !== 'prov';
       if (sol) { renderSol(); loadSol(); }
+      if (v === 'prov') loadProv();
     });
   });
 
+  // ===== catálogo de proveedores =====
+  var PROV = null, provEdit = null;
+  function loadProv() {
+    if (!PROV) $('p-list').innerHTML = '<div class="ds">Cargando proveedores…</div>';
+    return api({ action: 'provList' }).then(function (d) {
+      if (!d || !d.ok) throw 0; PROV = d.items || []; renderProv();
+    }).catch(function () { $('p-list').innerHTML = '<div class="ds">No se pudo cargar el catálogo de proveedores.</div>'; });
+  }
+  function provKey(x) { return String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase(); }
+  function renderProv() {
+    if (!PROV) return;
+    var q = provKey($('pq').value.trim()), all = PROV.slice().sort(function (a, b) { return a.nombre.localeCompare(b.nombre, 'es'); });
+    var f = q ? all.filter(function (x) { return provKey(x.nombre + ' ' + x.rfc).indexOf(q) >= 0; }) : all;
+    $('p-count').textContent = (q ? f.length + ' de ' : '') + PROV.length + ' proveedores';
+    if (!f.length) { $('p-list').innerHTML = '<div class="empty"><strong>Sin resultados</strong><span>Agrégalo con "＋ Nuevo proveedor".</span></div>'; return; }
+    var MAX = 300, rows = f.slice(0, MAX);
+    $('p-list').innerHTML = '<table class="prov-table"><thead><tr><th class="no">No.</th><th>Proveedor</th><th>RFC</th><th></th></tr></thead><tbody>' +
+      rows.map(function (x) { return '<tr><td class="no">' + esc(x.no) + '</td><td>' + esc(x.nombre) + '</td><td class="rfc">' + (esc(x.rfc) || '<span class="ds">—</span>') + '</td><td class="r"><button type="button" class="secondary p-ed" data-row="' + x.row + '">Editar</button></td></tr>'; }).join('') +
+      '</tbody></table>' + (f.length > MAX ? '<div class="prov-more">Se muestran ' + MAX + ' de ' + f.length + '. Escribe en el buscador para encontrar el que buscas.</div>' : '');
+    $('p-list').querySelectorAll('.p-ed').forEach(function (b) { b.addEventListener('click', function () { openProv(PROV.filter(function (x) { return x.row === +b.dataset.row; })[0]); }); });
+  }
+  function provMsg(t, k) { var m = $('p-msg'); m.textContent = t || ''; m.className = 'pf-msg' + (k ? ' ' + k : ''); }
+  function openProv(x) {
+    provEdit = x || null; $('p-form').hidden = false; $('p-form').dataset.forzar = '';
+    $('p-form-t').textContent = x ? 'Editar proveedor (No. ' + (x.no || '—') + ')' : 'Nombre o razón social (nuevo)';
+    $('p-nombre').value = x ? x.nombre : ''; $('p-rfc').value = x ? x.rfc : ''; provMsg('');
+    $('p-form').scrollIntoView({ block: 'nearest' }); $('p-nombre').focus();
+  }
+  function closeProv() { provEdit = null; $('p-form').hidden = true; provMsg(''); }
+  $('pq').addEventListener('input', renderProv);
+  $('p-new').addEventListener('click', function () { openProv(null); });
+  $('p-cancel').addEventListener('click', closeProv);
+  ['p-nombre', 'p-rfc'].forEach(function (id) { $(id).addEventListener('input', function () { $('p-form').dataset.forzar = ''; }); });
+  $('p-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var nombre = $('p-nombre').value.trim(), rfc = $('p-rfc').value.replace(/\s+/g, '').toUpperCase();
+    if (!nombre) { provMsg('Escribe el nombre del proveedor.', 'err'); return; }
+    if (rfc && !/^[A-ZÑ&]{3,4}\d{6}[A-Z\d]{3}$/.test(rfc)) { provMsg('El RFC no tiene un formato válido (12 o 13 caracteres).', 'err'); return; }
+    var prm = { action: 'provSave', nombre: nombre, rfc: rfc, forzar: $('p-form').dataset.forzar || '' };
+    if (provEdit) { prm.row = provEdit.row; prm.orig = provEdit.nombre; }
+    $('p-save').disabled = true; provMsg('Guardando…');
+    api(prm).then(function (d) {
+      if (!d || !d.ok) {
+        if (d && d.duplicado) { $('p-form').dataset.forzar = '1'; provMsg(d.error + ' Si de todos modos es otro proveedor, da clic en "Guardar" otra vez.', 'err'); return; }
+        provMsg((d && d.error) || 'No se pudo guardar.', 'err'); return;
+      }
+      var fue = provEdit ? 'actualizado' : 'agregado'; closeProv(); provMsg(''); $('pq').value = nombre;
+      return loadProv().then(function () { setConn('ok', 'Proveedor ' + fue + ': ' + nombre + '. Ya aparece en el formulario.'); });
+    }).catch(function () { provMsg('No se pudo conectar con el servidor.', 'err'); })
+      .then(function () { $('p-save').disabled = false; });
+  });
   function load() {
     loadSol();
     return api({ action: 'list' }).then(function (d) {
