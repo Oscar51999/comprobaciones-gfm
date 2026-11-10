@@ -86,6 +86,14 @@
   button.primary:hover { background: #1A3150; }
   button.secondary, a.secondary { font: inherit; font-weight: 600; font-size: 12.5px; color: var(--ink-soft); background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
   button.secondary:hover, a.secondary:hover { border-color: var(--turquoise); color: var(--turquoise-deep); }
+  .docs-box { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .docs-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-size: 13.5px; }
+  .docs-list { display: grid; gap: 6px; font-size: 13px; }
+  .doc-row { display: grid; grid-template-columns: 150px 1fr auto auto; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; background: var(--paper); }
+  .doc-row .dt { font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .3px; color: var(--navy-deep); }
+  .doc-row .dn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+  .doc-row .ds { font-size: 11.5px; color: var(--ink-soft); }
+  @media (max-width: 640px) { .doc-row { grid-template-columns: 1fr auto; } .doc-row .dt, .doc-row .ds { display: none; } }
   button.danger { color: var(--critical); border-color: var(--critical-bg); }
   button.danger:hover { border-color: var(--critical); background: var(--critical-bg); color: var(--critical); }
 
@@ -306,6 +314,10 @@
     <dl class="kv" id="d-kv"></dl>
     <div class="tbl"><table id="d-table"></table></div>
     <p class="letra">Importe con letra: <b id="d-letra"></b></p>
+    <div class="docs-box">
+      <div class="docs-head"><b id="d-docs-t">Archivos de la comprobación</b><button type="button" class="secondary" id="d-zip">⬇ Descargar todos (ZIP)</button></div>
+      <div class="docs-list" id="d-docs"></div>
+    </div>
     <div class="admin-box">
       <div>
         <label for="d-estado">Estado</label>
@@ -444,7 +456,7 @@
           '<div><b>Motivo</b>' + esc(r.motivo) + '</div><div><b>Tipo</b>' + esc(r.tipoComprobacion) + ' · <b>Pago</b>' + esc(r.metodoPago) + '</div>' +
           '<div><b>Depositar a</b>' + esc(r.titularCuenta) + ' · ' + esc(r.banco) + ' · <span class="mono">' + esc(r.clabe) + '</span>' + (r.cuentaBancaria ? ' · Cta ' + esc(r.cuentaBancaria) : '') + '</div>' +
           '<div><b>Correo</b>' + esc(r.contacto) + '</div>' +
-          '<div class="sol-links">' + (r.caratulaUrl ? '<a class="secondary" href="' + esc(r.caratulaUrl) + '" target="_blank" rel="noopener">Carátula ↗</a>' : '') + (r.carpetaUrl ? '<a class="secondary" href="' + esc(r.carpetaUrl) + '" target="_blank" rel="noopener">Carpeta ↗</a>' : '') + '</div>' +
+          '<div class="sol-links">' + (r.caratulaUrl ? '<a class="secondary" href="' + esc(r.caratulaUrl) + '" target="_blank" rel="noopener">Carátula ↗</a>' : '') + (r.carpetaUrl ? '<a class="secondary" href="' + esc(r.carpetaUrl) + '" target="_blank" rel="noopener">Carpeta ↗</a>' : '') + (r.carpetaUrl ? '<button type="button" class="secondary s-zip">⬇ Descargar archivos (ZIP)</button>' : '') + '</div>' +
         '</div><div>' +
           '<label class="sol-kv"><b>Comentarios de Finanzas</b> <span style="color:var(--ink-soft);font-size:11.5px">(se envían al colaborador)</span></label>' +
           '<textarea class="s-com" placeholder="Ej. Falta autorización del jefe de obra">' + esc(r.comentariosAdmin || '') + '</textarea>' +
@@ -453,6 +465,7 @@
             '<button type="button" class="act info" data-e="pagada">Depositada</button><button type="button" class="act warn" data-e="pendiente">Por autorizar</button>' +
           '</div><div class="sol-warn" hidden></div>' +
         '</div></div>';
+      var sz = c.querySelector('.s-zip'); if (sz) sz.addEventListener('click', function () { descargar(r.folio, 'zip', sz); });
       c.querySelectorAll('.act').forEach(function (b) {
         b.disabled = r.estado === b.dataset.e;
         b.addEventListener('click', function () { decidirSol(r, b.dataset.e, c); });
@@ -711,10 +724,47 @@
     $('d-folder').href = r.carpetaUrl || '#'; $('d-folder').hidden = !r.carpetaUrl;
     $('d-pdf').href = r.pdfUrl || '#'; $('d-pdf').hidden = !r.pdfUrl;
     $('d-caratula').href = r.caratulaUrl || '#'; $('d-caratula').hidden = !r.caratulaUrl;
+    cargarDocs(r.folio);
     $('d-del').textContent = 'Eliminar'; $('d-del').dataset.armed = '';
     $('detail').hidden = false;
     document.body.style.overflow = 'hidden';
   }
+  // ===== archivos (facturas, XML, carátula, formato PDF) =====
+  function docTipo(n, mime) {
+    if (/CARATULA/i.test(n)) return 'Carátula bancaria';
+    if (/FO-GF-01|FORMATO/i.test(n)) return 'Formato FO-GF-01';
+    if (/\.xml$/i.test(n) || /xml/.test(mime || '')) return 'XML (CFDI)';
+    if (/\.pdf$/i.test(n)) return 'PDF';
+    if (/^image\//.test(mime || '')) return 'Imagen / ticket';
+    return 'Archivo';
+  }
+  function kb(b) { b = Number(b) || 0; return b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+  function descargar(folio, doc, btn) {
+    var prev = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = doc === 'zip' ? 'Preparando ZIP…' : 'Descargando…'; }
+    return api({ action: 'descargar', id: folio, doc: doc }).then(function (d) {
+      if (!d || !d.ok) throw new Error(d && d.error === 'sin_archivos' ? 'No hay archivos' : (d && d.error) || 'sin respuesta');
+      var bin = atob(d.data), bytes = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([bytes], { type: d.mime || 'application/octet-stream' }));
+      var a = document.createElement('a'); a.href = url; a.download = d.nombre || 'archivo'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+    }).catch(function (e) { setConn('err', 'No se pudo descargar: ' + (e && e.message || e)); })
+      .then(function () { if (btn) { btn.disabled = false; btn.textContent = prev; } });
+  }
+  var docsFolio = null;
+  function cargarDocs(folio) {
+    docsFolio = folio; var L = $('d-docs'); L.innerHTML = '<span class="ds">Cargando archivos…</span>'; $('d-zip').hidden = true;
+    api({ action: 'archivos', id: folio }).then(function (d) {
+      if (docsFolio !== folio) return;
+      var items = (d && d.ok && d.items) || [];
+      $('d-docs-t').textContent = 'Archivos de la comprobación (' + items.length + ')';
+      if (!items.length) { L.innerHTML = '<span class="ds">' + (d && d.ok ? 'Esta comprobación no tiene archivos.' : 'No se pudo leer la carpeta.') + '</span>'; return; }
+      $('d-zip').hidden = items.length < 2;
+      L.innerHTML = items.map(function (x, i) { return '<div class="doc-row"><span class="dt">' + esc(docTipo(x.nombre, x.mime)) + '</span><span class="dn" title="' + esc(x.nombre) + '">' + esc(x.nombre) + '</span><span class="ds">' + kb(x.size) + '</span><button type="button" class="secondary doc-dl" data-i="' + i + '">⬇ Descargar</button></div>'; }).join('');
+      L.querySelectorAll('.doc-dl').forEach(function (b) { b.addEventListener('click', function () { descargar(folio, items[+b.dataset.i].id, b); }); });
+    }).catch(function () { if (docsFolio === folio) L.innerHTML = '<span class="ds">No se pudo leer la carpeta.</span>'; });
+  }
+  $('d-zip').addEventListener('click', function () { if (docsFolio) descargar(docsFolio, 'zip', this); });
   function closeDetail() { $('detail').hidden = true; openFolio = null; document.body.style.overflow = ''; }
   $('d-close').addEventListener('click', closeDetail);
   $('detail').addEventListener('click', function (e) { if (e.target === $('detail')) closeDetail(); });
