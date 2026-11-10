@@ -492,6 +492,18 @@
   }
   fillCc();
   $('f-empresa').addEventListener('change', function () { fillCc(); fillObras(); });
+  // CC agregados desde el panel (Finanzas)
+  if (APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf('http') === 0) {
+    fetch(APPS_SCRIPT_URL + '?action=ccExtra').then(function (r) { return r.json(); }).then(function (d) {
+      var ex = (d && d.ok && d.items) || {}, n = 0;
+      Object.keys(ex).forEach(function (emp) {
+        var l = CC_POR_EMPRESA[emp] = CC_POR_EMPRESA[emp] || [];
+        ex[emp].forEach(function (cc) { if (l.indexOf(cc) < 0) { l.push(cc); n++; } if (CAT.cc.indexOf(cc) < 0) CAT.cc.push(cc); if (CAT.obras.indexOf(cc) < 0) CAT.obras.push(cc); });
+        l.sort(function (a, b) { return a.localeCompare(b, 'es', { numeric: true }); });
+      });
+      if (n) { fillCc(); fillObras(); }
+    }).catch(function () {});
+  }
   fill($('f-metodo'), METODOS);
   fill($('f-banco'), CAT.bancos.filter(function (b) { return b !== 'N/A'; }));
   $('f-fecha-sol').value = todayISO();

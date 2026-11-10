@@ -99,6 +99,11 @@
   .prov-table td.r { text-align: right; white-space: nowrap; }
   .prov-table .rfc { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
   #view-prov .ds { font-size: 12.5px; color: var(--ink-soft); }
+  .cc-form { grid-template-columns: 1.4fr 110px 2fr auto; }
+  .cc-base { color: var(--ink-soft); font-size: 12px; }
+  .cc-new { display: inline-block; font-size: 11px; font-weight: 700; color: var(--turquoise-deep); border: 1px solid var(--turquoise); border-radius: 999px; padding: 1px 8px; margin-left: 6px; }
+  #view-cc .ds { font-size: 12.5px; color: var(--ink-soft); }
+  #view-cc select { font: inherit; font-size: 13.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; }
   .prov-more { font-size: 12.5px; color: var(--ink-soft); margin-top: 8px; }
   @media (max-width: 640px) { .prov-form { grid-template-columns: 1fr; } .prov-table .no { display: none; } }
   .docs-box { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
@@ -278,6 +283,24 @@
     <button type="button" class="tab on" data-v="comp" role="tab">Comprobaciones</button>
     <button type="button" class="tab" data-v="sol" role="tab">Solicitudes de recurso<span class="tab-n" id="sol-n" hidden></span></button>
     <button type="button" class="tab" data-v="prov" role="tab">Proveedores</button>
+    <button type="button" class="tab" data-v="cc" role="tab">Centros de costo</button>
+  </div>
+  <div id="view-cc" hidden>
+    <div class="toolbar">
+      <select id="cc-emp" aria-label="Empresa"><option value="">Todas las empresas</option></select>
+      <input type="search" id="cc-q" placeholder="Buscar CC por clave o nombre…">
+      <span class="spacer"></span>
+      <span class="ds" id="cc-count"></span>
+      <button type="button" class="primary" id="cc-new">＋ Nuevo CC</button>
+    </div>
+    <form class="prov-form cc-form" id="cc-form" hidden autocomplete="off">
+      <div><label for="cc-f-emp">Empresa</label><select id="cc-f-emp" required></select></div>
+      <div><label for="cc-f-clave">Clave</label><input type="text" id="cc-f-clave" maxlength="15" placeholder="147" required></div>
+      <div><label for="cc-f-nom">Nombre del centro de costos</label><input type="text" id="cc-f-nom" maxlength="120" required></div>
+      <div class="pf-acts"><button type="submit" class="primary" id="cc-save">Guardar</button><button type="button" class="secondary" id="cc-cancel">Cancelar</button></div>
+      <div class="pf-msg" id="cc-msg"></div>
+    </form>
+    <div id="cc-list"></div>
   </div>
   <div id="view-prov" hidden>
     <div class="toolbar">
@@ -516,9 +539,10 @@
   document.querySelectorAll('.tabs .tab').forEach(function (t) {
     t.addEventListener('click', function () {
       document.querySelectorAll('.tabs .tab').forEach(function (x) { x.classList.toggle('on', x === t); });
-      var v = t.dataset.v, sol = v === 'sol'; $('view-comp').hidden = v !== 'comp'; $('view-sol').hidden = !sol; $('view-prov').hidden = v !== 'prov';
+      var v = t.dataset.v, sol = v === 'sol'; $('view-comp').hidden = v !== 'comp'; $('view-sol').hidden = !sol; $('view-prov').hidden = v !== 'prov'; $('view-cc').hidden = v !== 'cc';
       if (sol) { renderSol(); loadSol(); }
       if (v === 'prov') loadProv();
+      if (v === 'cc') loadCc();
     });
   });
 
@@ -572,6 +596,70 @@
       return loadProv().then(function () { setConn('ok', 'Proveedor ' + fue + ': ' + nombre + '. Ya aparece en el formulario.'); });
     }).catch(function () { provMsg('No se pudo conectar con el servidor.', 'err'); })
       .then(function () { $('p-save').disabled = false; });
+  });
+  // ===== centros de costo =====
+  var CC_BASE = null, CC_EXTRA = {};
+  function ccSort(a, b) { return a.localeCompare(b, 'es', { numeric: true }); }
+  function loadCc() {
+    if (!CC_BASE) $('cc-list').innerHTML = '<div class="ds">Cargando centros de costo…</div>';
+    var base = CC_BASE ? Promise.resolve() : fetch('index.html', { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
+      var i = t.indexOf('var CAT = '); var j = t.indexOf('\n', i); var js = t.slice(i + 10, j).trim().replace(/;$/, '');
+      CC_BASE = JSON.parse(js).ccPorEmpresa || {};
+      var emps = Object.keys(CC_BASE), o = emps.map(function (e) { return '<option>' + esc(e) + '</option>'; }).join('');
+      $('cc-emp').insertAdjacentHTML('beforeend', o); $('cc-f-emp').innerHTML = '<option value="" disabled selected>Selecciona la empresa</option>' + o;
+    });
+    return base.then(function () { return api({ action: 'ccExtra' }); }).then(function (d) {
+      if (!d || !d.ok) throw 0; CC_EXTRA = d.items || {}; renderCc();
+    }).catch(function () { $('cc-list').innerHTML = '<div class="ds">No se pudieron cargar los centros de costo.</div>'; });
+  }
+  function renderCc() {
+    if (!CC_BASE) return;
+    var emp = $('cc-emp').value, q = provKey($('cc-q').value.trim()), rows = [];
+    Object.keys(CC_BASE).concat(Object.keys(CC_EXTRA).filter(function (e) { return !CC_BASE[e]; })).forEach(function (e) {
+      if (emp && e !== emp) return;
+      (CC_BASE[e] || []).forEach(function (c) { rows.push({ e: e, cc: c, nuevo: false }); });
+      (CC_EXTRA[e] || []).forEach(function (c) { if ((CC_BASE[e] || []).indexOf(c) < 0) rows.push({ e: e, cc: c, nuevo: true }); });
+    });
+    var f = q ? rows.filter(function (x) { return provKey(x.cc + ' ' + x.e).indexOf(q) >= 0; }) : rows;
+    f.sort(function (a, b) { return a.e === b.e ? ccSort(a.cc, b.cc) : ccSort(a.e, b.e); });
+    var nNew = rows.filter(function (x) { return x.nuevo; }).length;
+    $('cc-count').textContent = f.length + ' CC' + (nNew ? ' · ' + nNew + ' agregados desde el panel' : '');
+    if (!f.length) { $('cc-list').innerHTML = '<div class="empty"><strong>Sin resultados</strong><span>Agrégalo con "＋ Nuevo CC".</span></div>'; return; }
+    $('cc-list').innerHTML = '<table class="prov-table"><thead><tr><th>Centro de costos</th><th>Empresa</th><th></th></tr></thead><tbody>' +
+      f.map(function (x, i) { return '<tr><td>' + esc(x.cc) + (x.nuevo ? '<span class="cc-new">Agregado</span>' : '') + '</td><td class="cc-base">' + esc(x.e) + '</td><td class="r">' +
+        (x.nuevo ? '<button type="button" class="secondary cc-del" data-i="' + i + '">Quitar</button>' : '<span class="cc-base">Catálogo</span>') + '</td></tr>'; }).join('') + '</tbody></table>';
+    $('cc-list').querySelectorAll('.cc-del').forEach(function (b) { b.addEventListener('click', function () {
+      var x = f[+b.dataset.i]; if (!confirmDel(x)) return; b.disabled = true;
+      api({ action: 'ccDel', empresa: x.e, cc: x.cc }).then(function (d) { if (!d || !d.ok) throw 0; setConn('ok', 'CC quitado: ' + x.cc); return loadCc(); })
+        .catch(function () { b.disabled = false; setConn('err', 'No se pudo quitar el CC ' + x.cc); });
+    }); });
+  }
+  function confirmDel(x) { return b2('¿Quitar el CC "' + x.cc + '" de ' + x.e + '? Ya no aparecerá en el formulario.'); }
+  function b2(t) { try { return window.confirm(t); } catch (e) { return true; } }
+  function ccMsg(t, k) { var m = $('cc-msg'); m.textContent = t || ''; m.className = 'pf-msg' + (k ? ' ' + k : ''); }
+  $('cc-emp').addEventListener('change', renderCc);
+  $('cc-q').addEventListener('input', renderCc);
+  $('cc-new').addEventListener('click', function () {
+    $('cc-form').hidden = false; ccMsg(''); $('cc-f-clave').value = ''; $('cc-f-nom').value = '';
+    if ($('cc-emp').value) $('cc-f-emp').value = $('cc-emp').value;
+    $('cc-form').scrollIntoView({ block: 'nearest' }); ($('cc-f-emp').value ? $('cc-f-clave') : $('cc-f-emp')).focus();
+  });
+  $('cc-cancel').addEventListener('click', function () { $('cc-form').hidden = true; ccMsg(''); });
+  $('cc-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var emp = $('cc-f-emp').value, clave = $('cc-f-clave').value.replace(/\s+/g, '').toUpperCase(), nom = $('cc-f-nom').value.replace(/\s+/g, ' ').trim().toUpperCase();
+    if (!emp) { ccMsg('Selecciona la empresa.', 'err'); return; }
+    if (!/^[A-Z0-9][A-Z0-9.\-]{0,14}$/.test(clave)) { ccMsg('La clave del CC solo lleva números o letras (ej. 147).', 'err'); return; }
+    if (!nom) { ccMsg('Escribe el nombre del centro de costos.', 'err'); return; }
+    var ya = (CC_BASE[emp] || []).concat(CC_EXTRA[emp] || []).filter(function (c) { return c.split(' - ')[0].trim().toUpperCase() === clave; })[0];
+    if (ya) { ccMsg('Esa empresa ya tiene el CC ' + clave + ': ' + ya + '.', 'err'); return; }
+    $('cc-save').disabled = true; ccMsg('Guardando…');
+    api({ action: 'ccSave', empresa: emp, clave: clave, nombre: nom }).then(function (d) {
+      if (!d || !d.ok) { ccMsg((d && d.error) || 'No se pudo guardar.', 'err'); return; }
+      $('cc-form').hidden = true; ccMsg(''); $('cc-emp').value = emp; $('cc-q').value = '';
+      return loadCc().then(function () { setConn('ok', 'CC agregado: ' + d.cc + ' (' + emp + '). Ya aparece en el formulario.'); });
+    }).catch(function () { ccMsg('No se pudo conectar con el servidor.', 'err'); })
+      .then(function () { $('cc-save').disabled = false; });
   });
   function load() {
     loadSol();
